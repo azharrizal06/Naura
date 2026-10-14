@@ -4,14 +4,17 @@ import 'package:naura_mobile/controllers/checkout_controller.dart';
 import 'package:naura_mobile/services/api_client.dart';
 
 import '../fakes/fake_shipping.dart';
+import '../fakes/fake_store.dart';
 
 void main() {
   late FakeShippingService shipping;
+  late FakeStoreService store;
   late CheckoutController c;
 
   setUp(() {
     shipping = FakeShippingService();
-    c = CheckoutController(shipping);
+    store = FakeStoreService();
+    c = CheckoutController(shipping, store);
   });
 
   test('init memilih alamat default lalu memuat tarif dan memilih yang termurah', () async {
@@ -59,11 +62,40 @@ void main() {
 
   test('toOrder membawa id alamat, kurir, layanan, bank, catatan', () async {
     await c.init([address(id: 1)]);
-    c.selectBank('Mandiri');
+    c.selectBank('BSI');
     final order = c.toOrder(notes: 'Bungkus rapi');
     expect(order.addressId, 1);
     expect(order.courier, 'jnt');
     expect(order.service, 'EZ');
-    expect(order.bank, 'Mandiri');
+    expect(order.bank, 'BSI');
+  });
+
+  test('init memuat rekening dari server dan memilih yang pertama', () async {
+    await c.init([address(id: 1)]);
+    expect(store.calls, 1);
+    expect(c.banks.map((b) => b.bank), ['BCA', 'BSI']);
+    expect(c.bank, 'BCA');
+  });
+
+  test('rekening gagal dimuat → pesan error, belum siap dipesan, bisa dimuat ulang', () async {
+    store.error = ApiException(500, 'Server error');
+    await c.init([address(id: 1)]);
+    expect(c.banksError, isNotNull);
+    expect(c.bank, isNull);
+    expect(c.ready, isFalse);
+
+    store.error = null;
+    await c.loadBanks();
+    expect(c.banksError, isNull);
+    expect(c.bank, 'BCA');
+    expect(c.ready, isTrue);
+  });
+
+  test('toko belum punya rekening → tidak ada bank terpilih dan belum siap', () async {
+    store.accounts = [];
+    await c.init([address(id: 1)]);
+    expect(c.banks, isEmpty);
+    expect(c.bank, isNull);
+    expect(c.ready, isFalse);
   });
 }

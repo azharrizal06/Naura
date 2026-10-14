@@ -131,4 +131,12 @@ class ProductManagementTest extends TestCase
             ->deleteJson("/api/dashboard/categories/{$category->id}")
             ->assertStatus(422);
     }
+
+    public function test_per_page_is_capped(): void
+    {
+        $this->actingAs($this->admin())
+            ->getJson('/api/dashboard/products?per_page=5000')
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 100);
+    }
 }

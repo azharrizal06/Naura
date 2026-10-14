@@ -19,6 +19,12 @@ class OrderService {
   Future<Order> place(PlaceOrder request) async =>
       _parse(await _api.post('/orders', body: request.toJson()));
 
+  /// Batalkan pesanan yang belum dibayar; server mengembalikan stoknya.
+  Future<Order> cancel(int id) async => _parse(await _api.post('/orders/$id/cancel'));
+
+  /// Tandai paket yang sedang dikirim sudah diterima.
+  Future<Order> complete(int id) async => _parse(await _api.post('/orders/$id/complete'));
+
   Order _parse(dynamic res) =>
       Order.fromJson((res as Map<String, dynamic>)['data'] as Map<String, dynamic>);
 }

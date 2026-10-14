@@ -55,6 +55,12 @@ class OrdersController extends ChangeNotifier {
     }
   }
 
+  /// Ganti pesanan yang sudah ada di daftar dengan versi terbaru (mis. setelah dibatalkan).
+  void replace(Order order) {
+    _orders = [for (final o in _orders) o.id == order.id ? order : o];
+    notifyListeners();
+  }
+
   void reset() {
     _orders = [];
     _error = null;

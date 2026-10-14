@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/order_detail_controller.dart';
+import '../controllers/orders_controller.dart';
 import '../models/order.dart';
 import '../services/order_service.dart';
 import '../theme/naura_theme.dart';
@@ -64,6 +65,7 @@ class _OrderBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final bank = order.payment?.bank;
     final shipment = order.shipment;
+    final detail = context.watch<OrderDetailController>();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -98,6 +100,18 @@ class _OrderBody extends StatelessWidget {
                 : 'Nomor resi muncul setelah paket dikirim.',
             style: const TextStyle(fontSize: 13, color: NauraColors.muted),
           ),
+          if (detail.canComplete) ...[
+            const SizedBox(height: 16),
+            _OrderActionButton(
+              label: 'Pesanan diterima',
+              busyLabel: 'Menyimpan…',
+              title: 'Paket sudah diterima?',
+              message: 'Tandai selesai hanya bila paket sudah Anda terima dan isinya sesuai.',
+              confirmLabel: 'Ya, sudah diterima',
+              successMessage: 'Terima kasih! Pesanan selesai.',
+              action: (c) => c.complete(),
+            ),
+          ],
         ],
         const _Section('Barang'),
         for (final item in order.items) OrderLine(item: item),
@@ -118,7 +132,87 @@ class _OrderBody extends StatelessWidget {
           const _Section('Catatan'),
           Text(order.notes!, style: const TextStyle(height: 1.5)),
         ],
+        if (detail.canCancel) ...[
+          const SizedBox(height: 32),
+          _OrderActionButton(
+            label: 'Batalkan pesanan',
+            busyLabel: 'Membatalkan…',
+            title: 'Batalkan pesanan?',
+            message: 'Barang dikembalikan ke stok toko. Pesanan yang dibatalkan tidak bisa diaktifkan lagi.',
+            confirmLabel: 'Ya, batalkan',
+            successMessage: 'Pesanan dibatalkan.',
+            action: (c) => c.cancel(),
+            danger: true,
+          ),
+        ],
       ],
+    );
+  }
+}
+
+/// Tombol aksi pesanan dengan dialog konfirmasi; berhasil → daftar pesanan ikut diperbarui.
+class _OrderActionButton extends StatelessWidget {
+  const _OrderActionButton({
+    required this.label,
+    required this.busyLabel,
+    required this.title,
+    required this.message,
+    required this.confirmLabel,
+    required this.successMessage,
+    required this.action,
+    this.danger = false,
+  });
+
+  final String label;
+  final String busyLabel;
+  final String title;
+  final String message;
+  final String confirmLabel;
+  final String successMessage;
+  final Future<String?> Function(OrderDetailController) action;
+  final bool danger;
+
+  Future<void> _confirmAndRun(BuildContext context) async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Tidak')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: danger ? TextButton.styleFrom(foregroundColor: NauraColors.marun) : null,
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    if (yes != true || !context.mounted) return;
+
+    final detail = context.read<OrderDetailController>();
+    final error = await action(detail);
+    if (!context.mounted) return;
+    final order = detail.order;
+    if (error == null && order != null) context.read<OrdersController>().replace(order);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(error ?? successMessage)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final busy = context.watch<OrderDetailController>().busy;
+    final onPressed = busy ? null : () => _confirmAndRun(context);
+    final text = Text(busy ? busyLabel : label);
+    if (!danger) return FilledButton(onPressed: onPressed, child: text);
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: NauraColors.marun,
+        side: const BorderSide(color: NauraColors.marun),
+      ),
+      child: text,
     );
   }
 }

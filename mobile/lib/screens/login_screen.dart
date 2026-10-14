@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,6 +7,7 @@ import '../controllers/auth_controller.dart';
 import '../theme/naura_theme.dart';
 import '../widgets/error_box.dart';
 import '../widgets/fabric_bolts.dart';
+import 'forgot_password_screen.dart';
 import 'main_shell.dart';
 import 'register_screen.dart';
 
@@ -18,8 +20,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController(text: 'customer@naura.test');
-  final _passwordCtrl = TextEditingController(text: 'password');
+  // Terisi otomatis hanya saat debug atau build demo — bukan di rilis biasa.
+  static const _prefill = kDebugMode || AppConfig.demoMode;
+  final _emailCtrl = TextEditingController(text: _prefill ? AppConfig.demoEmail : '');
+  final _passwordCtrl = TextEditingController(text: _prefill ? AppConfig.demoPassword : '');
   String? _error;
 
   @override
@@ -82,6 +86,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Text('Masuk', style: display(28)),
                     const SizedBox(height: 20),
+                    if (AppConfig.demoMode) ...[
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: NauraColors.plumTint,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Versi demo — akun sudah terisi: ${AppConfig.demoEmail} / ${AppConfig.demoPassword}. '
+                          'Data toko contoh, bukan pesanan sungguhan.',
+                          style: TextStyle(fontSize: 13, height: 1.5, color: NauraColors.terong),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     if (_error != null) ...[
                       ErrorBox(_error!),
                       const SizedBox(height: 16),
@@ -103,7 +122,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (v) =>
                           (v == null || v.isEmpty) ? 'Isi password Anda' : null,
                     ),
-                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: busy
+                            ? null
+                            : () => Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => ForgotPasswordScreen(initialEmail: _emailCtrl.text.trim()),
+                                )),
+                        child: const Text('Lupa password?'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     FilledButton(
                       onPressed: busy ? null : _submit,
                       child: busy

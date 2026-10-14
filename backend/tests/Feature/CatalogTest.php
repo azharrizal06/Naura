@@ -71,4 +71,15 @@ class CatalogTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'data');
     }
+
+    public function test_per_page_is_capped(): void
+    {
+        $this->getJson('/api/catalog/products?per_page=1000000')
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 100);
+
+        $this->getJson('/api/catalog/products?per_page=0')
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 1);
+    }
 }

@@ -1,18 +1,19 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AxiosError } from 'axios'
 import { useAuth } from '@/auth/AuthContext'
+import { LoginPanel } from '@/components/LoginPanel'
 import type { ApiError } from '@/types'
 
-// Warna yang dijual toko, dari gelap ke terang — tampil sebagai gulungan kain.
-const BOLTS = ['#6C1F2B', '#A07E62', '#D2A3A3', '#B6A2C8', '#A2B299', '#5A5D3B', '#24304F', '#EEE8DC']
-const BOLT_HEIGHTS = [78, 100, 64, 88, 72, 94, 58, 82]
+const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
+// Terisi otomatis hanya saat development atau demo.
+const PREFILL = import.meta.env.DEV || DEMO
 
 export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@naura.test')
-  const [password, setPassword] = useState('password')
+  const [email, setEmail] = useState(PREFILL ? 'admin@naura.test' : '')
+  const [password, setPassword] = useState(PREFILL ? 'password' : '')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -37,21 +38,7 @@ export function LoginPage() {
 
   return (
     <div className="login">
-      <section className="login-panel">
-        <div>
-          <div className="wordmark">naura</div>
-          <p>Kelola koleksi, stok, dan pesanan toko dari satu tempat.</p>
-        </div>
-        <div className="bolts" aria-hidden="true">
-          {BOLTS.map((color, i) => (
-            <span
-              key={color}
-              className="bolt"
-              style={{ background: color, height: `${BOLT_HEIGHTS[i]}%`, animationDelay: `${i * 70}ms` }}
-            />
-          ))}
-        </div>
-      </section>
+      <LoginPanel />
 
       <div className="login-form-wrap">
         <form className="login-form" onSubmit={handleSubmit}>
@@ -59,6 +46,30 @@ export function LoginPage() {
           <p className="muted" style={{ margin: 0 }}>
             Untuk admin dan pemilik toko.
           </p>
+
+          {DEMO && (
+            <div className="demo-accounts">
+              Versi demo dengan data toko contoh. Password semua akun: <strong>password</strong>
+              <div>
+                {[
+                  ['Masuk sebagai Owner', 'owner@naura.test'],
+                  ['Masuk sebagai Admin', 'admin@naura.test'],
+                ].map(([label, demoEmail]) => (
+                  <button
+                    key={demoEmail}
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      setEmail(demoEmail)
+                      setPassword('password')
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="alert" role="alert">
@@ -90,6 +101,9 @@ export function LoginPage() {
           <button type="submit" disabled={submitting}>
             {submitting ? 'Memeriksa…' : 'Masuk'}
           </button>
+          <Link className="btn-link" to={`/forgot-password?email=${encodeURIComponent(email)}`}>
+            Lupa password?
+          </Link>
         </form>
       </div>
     </div>

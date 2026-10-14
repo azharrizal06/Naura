@@ -29,7 +29,7 @@ class ProductController extends Controller
                 $q->where('is_active', $request->query('status') === 'active');
             })
             ->latest()
-            ->paginate($request->integer('per_page', 15))
+            ->paginate($this->perPage($request, 15))
             ->withQueryString();
 
         return ProductListResource::collection($products);

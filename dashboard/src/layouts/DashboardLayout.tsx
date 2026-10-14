@@ -22,13 +22,14 @@ export function DashboardLayout() {
           <NavLink to="/categories">Kategori</NavLink>
           <NavLink to="/orders">Pesanan</NavLink>
           {user?.role === 'owner' && <NavLink to="/reports">Laporan</NavLink>}
+          {user?.role === 'owner' && <NavLink to="/admins">Admin</NavLink>}
           {user?.role === 'owner' && <NavLink to="/settings">Pengaturan</NavLink>}
         </nav>
         <div className="sidebar-user">
-          <span>
+          <NavLink to="/profile" className="sidebar-profile" title="Ubah profil & password">
             <strong>{user?.name}</strong>
-            {user?.role_label}
-          </span>
+            {user?.role_label} · Profil
+          </NavLink>
           <button onClick={handleLogout}>Keluar</button>
         </div>
       </aside>

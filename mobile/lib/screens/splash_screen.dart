@@ -33,6 +33,41 @@ class SplashScreen extends StatelessWidget {
             ),
           ),
         );
+      case AuthStatus.waking:
+        return Scaffold(
+          backgroundColor: NauraColors.terong,
+          body: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('naura', style: display(56, color: Colors.white)),
+                    const SizedBox(height: 24),
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: NauraColors.kuningan),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Server sedang dinyalakan…',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Biasanya kurang dari satu menit bila toko lama tidak dikunjungi. Aplikasi mencoba lagi otomatis.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFFC9BCCF), height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
       case AuthStatus.unreachable:
         return Scaffold(
           backgroundColor: NauraColors.terong,

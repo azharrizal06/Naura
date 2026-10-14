@@ -8,9 +8,11 @@ import '../controllers/nav_controller.dart';
 import '../controllers/orders_controller.dart';
 import '../theme/naura_theme.dart';
 import 'addresses_screen.dart';
+import 'change_password_screen.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
 
-/// Akun: data diri, alamat pengiriman, dan keluar. Ubah profil menyusul (Fase 7).
+/// Akun: data diri, alamat pengiriman, ubah profil, ganti password, dan keluar.
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
@@ -60,11 +62,20 @@ class AccountScreen extends StatelessWidget {
             ),
           ),
           const Divider(height: 1, color: NauraColors.garis),
-          const SizedBox(height: 16),
-          const Text(
-            'Ubah nama, email, dan password akan tersedia di pembaruan berikutnya.',
-            style: TextStyle(fontSize: 13, color: NauraColors.muted, height: 1.5),
+          _MenuTile(
+            icon: Icons.person_outline,
+            title: 'Ubah profil',
+            subtitle: 'Nama, nomor HP, dan email',
+            builder: (_) => const ProfileScreen(),
           ),
+          const Divider(height: 1, color: NauraColors.garis),
+          _MenuTile(
+            icon: Icons.lock_outline,
+            title: 'Ganti password',
+            subtitle: 'Perangkat lain akan dikeluarkan',
+            builder: (_) => const ChangePasswordScreen(),
+          ),
+          const Divider(height: 1, color: NauraColors.garis),
           const SizedBox(height: 28),
           OutlinedButton(
             onPressed: () => _logout(context),
@@ -78,6 +89,27 @@ class AccountScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  const _MenuTile({required this.icon, required this.title, required this.subtitle, required this.builder});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final WidgetBuilder builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: NauraColors.plum),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right, color: NauraColors.muted),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: builder)),
     );
   }
 }

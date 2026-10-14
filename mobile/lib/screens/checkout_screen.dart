@@ -8,6 +8,7 @@ import '../controllers/nav_controller.dart';
 import '../controllers/orders_controller.dart';
 import '../models/address.dart';
 import '../services/shipping_service.dart';
+import '../services/store_service.dart';
 import '../theme/naura_theme.dart';
 import '../utils/format.dart';
 import '../widgets/address_card.dart';
@@ -24,7 +25,7 @@ class CheckoutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => CheckoutController(context.read<ShippingService>())
+      create: (context) => CheckoutController(context.read<ShippingService>(), context.read<StoreService>())
         ..init(context.read<AddressController>().addresses),
       child: const _CheckoutView(),
     );
@@ -69,6 +70,9 @@ class _CheckoutViewState extends State<_CheckoutView> {
     if (!mounted) return;
     final order = result.order;
     if (order == null) {
+      // Server bisa menolak karena harga berubah atau barang nonaktif dan sudah
+      // menyamakan keranjang — muat ulang agar total baru langsung terlihat.
+      context.read<CartController>().load();
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(result.error ?? 'Pesanan tidak terkirim.')));
@@ -109,21 +113,7 @@ class _CheckoutViewState extends State<_CheckoutView> {
           const Text('Transfer bank. Nomor rekening tampil lagi setelah pesanan dibuat.',
               style: TextStyle(fontSize: 13, color: NauraColors.muted, height: 1.45)),
           const SizedBox(height: 8),
-          RadioGroup<String>(
-            groupValue: checkout.bank,
-            onChanged: (v) => checkout.selectBank(v ?? checkout.bank),
-            child: Column(
-              children: [
-                for (final acc in bankAccounts)
-                  _BankOption(
-                    bank: acc.bank,
-                    detail: '${acc.number} a.n. ${acc.holder}',
-                    selected: checkout.bank == acc.bank,
-                    onTap: () => checkout.selectBank(acc.bank),
-                  ),
-              ],
-            ),
-          ),
+          _BanksSection(checkout: checkout),
 
           const _SectionTitle('Catatan untuk penjual'),
           TextField(
@@ -210,6 +200,60 @@ class _RatesSection extends StatelessWidget {
               rate: r,
               selected: selected != null && r.sameAs(selected),
               onTap: () => checkout.selectRate(r),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BanksSection extends StatelessWidget {
+  const _BanksSection({required this.checkout});
+
+  final CheckoutController checkout;
+
+  @override
+  Widget build(BuildContext context) {
+    if (checkout.loadingBanks) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 12),
+            Text('Memuat rekening toko…', style: TextStyle(color: NauraColors.muted)),
+          ],
+        ),
+      );
+    }
+    if (checkout.banksError != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(checkout.banksError!,
+              style: const TextStyle(fontSize: 13, color: NauraColors.marun, height: 1.45)),
+          TextButton(onPressed: checkout.loadBanks, child: const Text('Muat ulang rekening')),
+        ],
+      );
+    }
+    if (checkout.banks.isEmpty) {
+      return const Text('Toko belum menyiapkan rekening transfer. Hubungi penjual.',
+          style: TextStyle(fontSize: 13, color: NauraColors.muted));
+    }
+
+    return RadioGroup<String>(
+      groupValue: checkout.bank,
+      onChanged: (v) {
+        if (v != null) checkout.selectBank(v);
+      },
+      child: Column(
+        children: [
+          for (final acc in checkout.banks)
+            _BankOption(
+              bank: acc.bank,
+              detail: '${acc.number} a.n. ${acc.holder}',
+              selected: checkout.bank == acc.bank,
+              onTap: () => checkout.selectBank(acc.bank),
             ),
         ],
       ),

@@ -51,4 +51,12 @@ void main() {
     final result = await c.place(_request);
     expect(result.error, 'Pembuatan pesanan belum tersedia. Keranjang Anda tetap tersimpan.');
   });
+
+  test('replace memperbarui pesanan di daftar (mis. setelah dibatalkan)', () async {
+    final c = OrdersController(FakeOrderService());
+    await c.load();
+    c.replace(Order.fromJson(orderJson(id: 2, status: 'cancelled')));
+    expect(c.orders.map((o) => o.id), [2, 1]);
+    expect(c.orders.first.status, OrderStatus.cancelled);
+  });
 }

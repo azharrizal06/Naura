@@ -9,6 +9,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\StoreSetting;
+use App\Services\Orders\OrderWorkflow;
 use App\Services\Shipping\ShippingRateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class OrderController extends Controller
         if ($cart->items->isEmpty()) {
             throw ValidationException::withMessages(['cart' => 'Keranjang kosong. Tambahkan barang sebelum membuat pesanan.']);
         }
+        $this->ensureCartIsCurrent($cart);
 
         // Ongkir dihitung ulang di server — nilai dari aplikasi tidak dipercaya.
         $rate = $shippingRates->find($cart, $address, $request->string('courier')->value(), $request->string('service')->value());
@@ -73,7 +75,8 @@ class OrderController extends Controller
                 }
             }
 
-            $subtotal = $cart->subtotal();
+            // Harga dari baris varian yang terkunci, bukan snapshot keranjang.
+            $subtotal = $cart->items->sum(fn ($item) => $variants[$item->product_variant_id]->price * $item->quantity);
             $shipping = $rate['cost'];
 
             $order = Order::create([
@@ -90,15 +93,16 @@ class OrderController extends Controller
             ]);
 
             foreach ($cart->items as $item) {
+                $price = $variants[$item->product_variant_id]->price;
                 $order->items()->create([
                     'product_variant_id' => $item->product_variant_id,
                     'product_name' => $item->variant->product->name,
                     'variant_name' => $item->variant->name,
-                    'unit_price' => $item->unit_price,
+                    'unit_price' => $price,
                     'quantity' => $item->quantity,
-                    'subtotal' => $item->subtotal(),
+                    'subtotal' => $price * $item->quantity,
                 ]);
-                // Stok dipesan sejak pesanan dibuat (dikembalikan bila batal — Fase 5).
+                // Stok dipesan sejak pesanan dibuat (dikembalikan saat batal — lihat OrderWorkflow::cancel).
                 $variants[$item->product_variant_id]->decrement('stock', $item->quantity);
             }
 
@@ -121,6 +125,47 @@ class OrderController extends Controller
         });
 
         return $this->orderResponse($order, 201);
+    }
+
+    /**
+     * Tolak checkout bila isi keranjang sudah tidak sesuai katalog: barang nonaktif,
+     * atau harga berubah sejak ditambahkan. Harga keranjang disamakan dulu agar
+     * customer melihat total baru sebelum memesan — tidak ditagih diam-diam.
+     */
+    private function ensureCartIsCurrent(Cart $cart): void
+    {
+        foreach ($cart->items as $item) {
+            $variant = $item->variant;
+            if (! $variant->is_active || ! $variant->product->is_active) {
+                throw ValidationException::withMessages([
+                    'cart' => "{$variant->product->name} ({$variant->name}) sudah tidak dijual. Hapus dari keranjang lalu pesan lagi.",
+                ]);
+            }
+        }
+
+        $changed = $cart->items->filter(fn ($item) => $item->unit_price !== $item->variant->price);
+        if ($changed->isEmpty()) {
+            return;
+        }
+        foreach ($changed as $item) {
+            $item->update(['unit_price' => $item->variant->price]);
+        }
+        $first = $changed->first()->variant;
+        throw ValidationException::withMessages([
+            'cart' => "Harga {$first->name} berubah menjadi Rp".number_format($first->price, 0, ',', '.').'. Periksa keranjang lalu pesan lagi.',
+        ]);
+    }
+
+    /** Batalkan pesanan yang belum dibayar dan kembalikan stoknya. */
+    public function cancel(Request $request, int $order, OrderWorkflow $workflow): JsonResponse
+    {
+        return $this->orderResponse($workflow->cancel($request->user()->orders()->findOrFail($order)));
+    }
+
+    /** Customer menandai paket sudah diterima. */
+    public function complete(Request $request, int $order, OrderWorkflow $workflow): JsonResponse
+    {
+        return $this->orderResponse($workflow->complete($request->user()->orders()->findOrFail($order)));
     }
 
     private function orderResponse(Order $order, int $status = 200): JsonResponse

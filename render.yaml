@@ -1,0 +1,51 @@
+# Blueprint Render — backend naura (paket gratis). Panduan: docs/deploy.md
+# Nilai `sync: false` diisi manual di dashboard Render (rahasia / bergantung URL).
+services:
+  - type: web
+    name: naura-api
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: Naura
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false            # php artisan key:generate --show
+      - key: APP_URL
+        sync: false            # https://naura-api.onrender.com
+      - key: APP_TIMEZONE
+        value: Asia/Jakarta
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false            # connection string Neon (direct, bukan pooler)
+      - key: DB_SSLMODE
+        value: require
+      - key: CACHE_STORE
+        value: file            # rate limit & cache RajaOngkir; tidak membangunkan Neon
+      - key: SESSION_DRIVER
+        value: array
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: MAIL_MAILER
+        value: log
+      - key: TRUSTED_PROXIES
+        value: "*"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false            # https://<proyek>.vercel.app
+      - key: DEMO_MODE
+        value: "true"
+      - key: SANCTUM_TOKEN_EXPIRATION
+        value: "43200"
+      - key: RAJAONGKIR_API_KEY
+        value: ""              # kosong = ongkir flat "Kurir toko" (hemat kuota)

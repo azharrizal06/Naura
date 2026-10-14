@@ -1,163 +1,75 @@
-# Backend — Toko Online Terpadu (Laravel REST API)
+# Backend — Laravel 12 REST API
 
-REST API (Laravel 12) untuk aplikasi e-commerce satu toko. Autentikasi **Laravel Sanctum** (Bearer token untuk mobile Flutter, cookie SPA untuk dashboard React). Database **PostgreSQL**.
+Sanctum **Bearer token** untuk mobile & dashboard (tanpa cookie session — jangan pasang `statefulApi()`). PostgreSQL. Error selalu JSON `{ message, errors? }`.
 
-## Prasyarat
-
-- PHP **8.2+** dengan ekstensi: `pdo_pgsql`, `pgsql`, `mbstring`, `openssl`, `fileinfo`, `curl`, `ctype`, `bcmath`
-- Composer 2.x
-- PostgreSQL 14+ (di mesin ini: v18)
-
-## Setup
+## Setup & test
 
 ```bash
-# 1. Install dependency
-composer install
-
-# 2. Siapkan environment
-cp .env.example .env
-php artisan key:generate
-
-# 3. Buat database PostgreSQL bernama "naura"
-#    (psql ada di: C:\Program Files\PostgreSQL\18\bin\psql.exe)
-createdb -U postgres naura
-#   atau via psql:  CREATE DATABASE naura;
-
-# 4. Sesuaikan kredensial DB di .env (DB_USERNAME / DB_PASSWORD)
-
-# 5. Migrasi + seed data awal
-php artisan migrate --seed
-
-# 6. Symlink storage (agar foto produk dapat diakses publik)
-php artisan storage:link
-
-# 7. Jalankan server
-php artisan serve         # http://127.0.0.1:8000
+composer install && cp .env.example .env && php artisan key:generate
+createdb -U postgres naura          # psql: C:\Program Files\PostgreSQL\18\bin
+php artisan migrate --seed && php artisan storage:link && php artisan serve
+createdb -U postgres naura_testing && php artisan test   # 174 test
 ```
 
-## Akun Default (hasil seeder)
+`.env` penting: `DB_*`, `APP_TIMEZONE=Asia/Jakarta`, `RAJAONGKIR_API_KEY` (key Shipping Cost, header `key`), `RAJAONGKIR_COURIERS` (mis. `jne:jnt:sicepat:pos`), `SANCTUM_TOKEN_EXPIRATION` (menit, default 43200 = 30 hari), `CORS_ALLOWED_ORIGINS`, `MAIL_MAILER=log` (dev: email masuk `storage/logs/laravel.log`), `DEMO_MODE` (lindungi akun demo), `DB_SSLMODE` (`require` untuk Neon), `TRUSTED_PROXIES` (`*` di Render).
 
-| Role     | Email               | Password   |
-|----------|---------------------|------------|
-| Owner    | owner@naura.test    | `password` |
-| Admin    | admin@naura.test    | `password` |
-| Customer | customer@naura.test | `password` |
-
-## Autentikasi
-
-### Mobile / API client (token)
-```http
-POST /api/auth/register      # customer baru
-POST /api/auth/login         # { email, password, device_name? } -> { token }
-GET  /api/auth/me            # Authorization: Bearer <token>
-POST /api/auth/logout
-POST /api/auth/logout-all
-```
-
-Kirim header `Authorization: Bearer <token>` untuk endpoint terproteksi.
-
-### Role & Authorization
-
-Middleware `role:` membatasi akses:
-
-```php
-Route::middleware('role:admin,owner')->group(...);  // dashboard
-Route::middleware('role:owner')->group(...);        // khusus owner
-Route::middleware('role:customer')->group(...);     // khusus customer
-```
-
-Endpoint contoh (Fase 1):
-- `GET /api/ping/customer` — hanya Customer
-- `GET /api/dashboard/ping` — Admin & Owner
-- `GET /api/owner/ping` — hanya Owner
-
-## Katalog (Fase 2)
+## Endpoint (`/api`)
 
 ```http
-GET /api/catalog/products?q=&category=&page=   # publik
-GET /api/catalog/products/{slug}
-GET /api/catalog/categories
-/api/dashboard/products|categories             # CRUD Admin/Owner + varian, stok, foto
+# Publik (auth/* kena throttle:auth)
+POST /auth/register | /auth/login | /auth/forgot-password {email} | /auth/reset-password {email,code,password,password_confirmation}
+GET  /catalog/products?q=&category=&sort=&per_page= | /catalog/products/{slug} | /catalog/categories
+GET  /store                                   # info toko + bank_accounts[{bank,number,holder}]
+
+# Login (auth:sanctum + active)
+GET /auth/me · POST /auth/logout | /auth/logout-all
+PATCH /auth/profile {name?,phone?,email?,current_password? (wajib bila email diganti)}
+PUT   /auth/password {current_password,password,password_confirmation}
+
+# role:customer
+GET /cart · POST /cart/items {variant_id,quantity?} · PATCH|DELETE /cart/items/{id}
+GET|POST /addresses · PATCH|DELETE /addresses/{id}
+GET /shipping/destinations?search= · POST /shipping/rates {address_id,courier?}   # + throttle:shipping
+GET|POST /orders {address_id,courier,service,payment_method:manual_transfer,bank,notes?} · GET /orders/{id}
+POST /orders/{id}/cancel (pending) · POST /orders/{id}/complete (shipped)
+
+# role:admin,owner — prefix /dashboard
+apiResource products, categories · products/{p}/variants (CRUD, PATCH …/stock) · products/{p}/images (POST, PATCH …/primary, DELETE)
+GET summary                                   # orders_today, awaiting_payment, to_process, to_ship (+ revenue_this_month untuk owner)
+GET orders?status=&q= · GET orders/{id}
+POST orders/{id}/confirm-payment | process | ship {tracking_number,courier?} | complete | cancel
+
+# role:owner — prefix /owner
+GET reports/sales?from=&to=                   # default 30 hari, maks 366
+GET|POST admins · PATCH admins/{id} {name?,email?,phone?,password?,is_active?}
+GET|PATCH settings {store_name,store_email?,store_phone?,store_address?,flat_shipping_cost,bank_accounts[]}
 ```
 
-## Keranjang (Fase 3, khusus Customer)
+## Aturan bisnis
 
-```http
-GET    /api/cart                      # isi + count, subtotal, shipping_cost, total
-POST   /api/cart/items                # { variant_id, quantity? } — digabung bila varian sama
-PATCH  /api/cart/items/{id}           # { quantity >= 1 }
-DELETE /api/cart/items/{id}
-```
-
-- 422 bila jumlah melebihi stok, atau varian/produk nonaktif.
-- `unit_price` = snapshot harga saat ditambah; ongkir = `store_settings.flat_shipping_cost` (0 bila kosong).
-- Item milik customer lain → 404; Admin/Owner → 403.
-
-## Alamat & Ongkir (Fase 3, khusus Customer)
-
-```http
-GET|POST /api/addresses              # alamat pertama otomatis jadi utama
-PATCH|DELETE /api/addresses/{id}     # hapus alamat utama → alamat lain jadi utama
-GET  /api/shipping/destinations?search=braga   # cari kecamatan/kelurahan (RajaOngkir)
-POST /api/shipping/rates { address_id }        # pilihan kurir untuk isi keranjang
-```
-
-Konfigurasi `.env`: `RAJAONGKIR_BASE_URL` (`https://rajaongkir.komerce.id/api/v1/`), `RAJAONGKIR_API_KEY` (key **Shipping Cost**, dikirim lewat header `key`, tidak pernah ke client), `RAJAONGKIR_COURIERS` (mis. `jne:jnt:sicepat:pos` — terverifikasi bisa digabung dengan `:`).
-
-Lokasi asal toko disimpan di **`store_settings.shipping_origin_id`**, diisi dari hasil pencarian (ID tidak bisa dikarang):
-
-```bash
-php artisan store:shipping-origin "nama kecamatan/kelurahan toko"          # pilih dari daftar
-php artisan store:shipping-origin "braga" --id=4949                        # tanpa interaksi
-```
-
-`POST /api/shipping/rates` menerima `courier` opsional (harus salah satu kurir toko). Tanpa key/origin → satu pilihan `toko`/`REG` (ongkir flat); pencarian tanpa key → 503 (aplikasi beralih ke isi manual). Rute yang tidak dilayani kurir → daftar kosong; RajaOngkir gagal/timeout (connect 5 dtk, total 10 dtk) → 502. Cache: pencarian 1 hari, tarif 30 menit.
-
-> **Windows/PHP**: bila log berisi `cURL error 60: unable to get local issuer certificate`, isi `curl.cainfo` dan `openssl.cafile` di `php.ini` dengan bundel CA (mis. `cacert.pem`). Jangan mematikan verifikasi SSL.
-
-## Pesanan (Fase 4, khusus Customer)
-
-```http
-GET  /api/orders            # milik sendiri, terbaru dulu
-POST /api/orders            # { address_id, courier, service, payment_method: manual_transfer, bank, notes? }
-GET  /api/orders/{id}       # milik customer lain → 404
-```
-
-- Pesanan dibuat dari isi keranjang dalam satu transaksi: snapshot barang & alamat tersimpan, ongkir **dihitung ulang** dari layanan kurir yang dipilih, baris `shipments` (`courier`, `service`, status `preparing`), payment `pending` dengan rekening tujuan (`payments.meta.bank`), keranjang dikosongkan, stok dikurangi.
-- 422: keranjang kosong / stok tidak cukup (`cart`), layanan kurir tidak tersedia (`service`), rekening tidak ada di `store_settings.bank_accounts` (`bank`). Alamat milik customer lain → 404.
-
-## Testing
-
-```bash
-# Buat database test
-createdb -U postgres naura_testing
-
-php artisan test          # 71 test (auth, katalog, manajemen produk, keranjang, alamat, ongkir, pesanan)
-```
-
-## Struktur Direktori
-
-```
-app/
-├── Enums/UserRole.php                 # customer | admin | owner
-├── Http/
-│   ├── Controllers/Api/               # Auth, Catalog, Cart, Address, Shipping, Order, Admin/* (produk, kategori, varian, foto)
-│   ├── Middleware/EnsureUserHasRole.php
-│   ├── Requests/                      # Auth/, Catalog/, Cart/, Address/, Shipping/, Order/ — validasi
-│   └── Resources/                     # User, Product*, Category, Cart, CartItem, Address, Order
-├── Console/Commands/SetShippingOrigin.php  # store:shipping-origin
-├── Services/Shipping/                 # RajaOngkir (klien API + cache), ShippingRateService (berat & tarif)
-├── Models/                            # User, Product, Order, dst (semua fase)
-database/
-├── migrations/                        # schema lengkap semua fase
-├── factories/                         # User, Category, Product, ProductVariant
-└── seeders/DatabaseSeeder.php         # akun default + katalog busana muslimah
-routes/api.php                         # endpoint API
-tests/Feature/                         # AuthTest, CatalogTest, ProductManagementTest, CartTest, AddressTest, ShippingTest, ShippingOriginCommandTest, OrderTest
-```
+- **Status pesanan** hanya lewat `Services/Orders/OrderWorkflow` (kunci baris, salah urutan → 422 `order`): `pending → paid → processing → shipped → completed`; batal customer dari `pending`, admin dari `pending/paid/processing`. Stok dikurangi saat dibuat, dikembalikan saat batal. Batal sesudah bayar → payment tetap `paid`.
+- **Checkout** (`OrderController::store`, satu transaksi + `lockForUpdate` varian): harga dari varian saat itu; harga keranjang beda / barang nonaktif → 422 `cart` dan keranjang disamakan; ongkir dihitung ulang server; rekening harus ada di `store_settings.bank_accounts` (disimpan di `payments.meta.bank`).
+- **Ongkir**: tanpa key/origin → satu pilihan `toko`/`REG` (ongkir flat); pencarian tanpa key → 503; RajaOngkir gagal → 502. Cache pencarian 1 hari, tarif 30 menit. Asal toko di `store_settings.shipping_origin_id` via `php artisan store:shipping-origin "<kecamatan>" [--id=]`.
+- **Omzet** (`Services/Reports/SalesReport`): pesanan paid–completed menurut `payments.paid_at`; `cancelled` dihitung menurut tanggal dibuat.
+- **Reset password**: kode 6 digit ter-hash di `password_reset_tokens` (+`attempts`), 15 menit, sekali pakai, hangus setelah 5 salah; jawaban forgot selalu sama; berhasil → semua token dicabut. Ganti password → token lain dicabut. Admin dinonaktifkan → tokennya dicabut; akun nonaktif → 403 di semua rute login (middleware `active`).
+- **Nomor pesanan** berurutan per hari `INV-YYYYMMDD-NNNN` (`Order::generateNumber`, advisory lock — panggil di dalam transaksi).
+- **DEMO_MODE** (`config/demo.php`, `Support/Demo`): akun demo tidak bisa ganti password/email, menerima kode reset, atau dinonaktifkan → 403.
+- **Kelola admin** hanya akun ber-role admin (owner/customer → 404). **Pengaturan**: nama bank unik, nomor 4–30 digit; `shipping_origin_*` tidak bisa diubah lewat API.
+- **Rate limit** (`AppServiceProvider`): api 120/mnt per user/IP; `auth` 5/mnt per email+IP & 20/mnt per IP; `shipping` 30/mnt per user → 429 + `Retry-After`.
 
 ## Konvensi
 
-- **Harga** disimpan sebagai `integer` (rupiah) — hindari float.
-- Response error API selalu JSON `{ "message": ..., "errors"?: {...} }`.
-- Validasi via Form Request; transformasi output via API Resource.
+- Harga `integer` rupiah. Validasi di Form Request, output via API Resource.
+- Paginasi: `$this->perPage($request, $default)` (dijepit 1–100).
+- PostgreSQL tidak mengindeks FK otomatis — kolom FK baru wajib `->index()`.
+- `jsonb` mengacak urutan key — resource menyusun ulang bila urutan penting.
+- Test waktu: `Carbon::parse('…', 'UTC')` karena aplikasi WIB. RajaOngkir di test selalu `Http::fake` (`phpunit.xml` mengosongkan key).
+- Windows `cURL error 60` → set `curl.cainfo`/`openssl.cafile` di `php.ini`, jangan matikan SSL.
+
+## Struktur
+
+`app/Http/Controllers/Api` (+`Admin/`, `Owner/`) · `Http/Requests/{Auth,Catalog,Cart,Address,Shipping,Order,Owner}` · `Http/Resources` · `Http/Middleware/{EnsureUserHasRole,EnsureUserIsActive}` · `Services/{Orders,Reports,Shipping}` · `Notifications/PasswordResetCode` · `Console/Commands/SetShippingOrigin` · `tests/Feature/*Test.php` (satu file per modul). Seeder: akun default + katalog busana muslimah.
+
+## Deploy & demo
+
+`Dockerfile` (php:8.3-apache, `docker/entrypoint.sh`: Apache di `$PORT`, `config:cache`, `migrate --force`) + `render.yaml` di root. Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (deterministik, juga untuk reset). Langkah lengkap: `docs/deploy.md`.

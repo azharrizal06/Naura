@@ -79,6 +79,11 @@ class FakeAuthService implements AuthService {
   @override
   Future<String?> loadToken() async => token;
 
+  int warmUps = 0;
+
+  @override
+  Future<void> warmUp() async => warmUps++;
+
   @override
   Future<User> me() async => user;
 
@@ -100,6 +105,49 @@ class FakeAuthService implements AuthService {
 
   @override
   Future<void> logout() async => token = null;
+
+  // --- Fase 7: akun & profil ---
+  ApiException? accountError;
+  final List<String> codeRequests = [];
+  ({String email, String code, String password})? lastReset;
+  Map<String, String?>? lastProfile;
+  ({String current, String next})? lastPasswordChange;
+
+  @override
+  Future<String> forgotPassword(String email) async {
+    if (accountError != null) throw accountError!;
+    codeRequests.add(email);
+    return 'Jika email terdaftar, kode reset sudah dikirim.';
+  }
+
+  @override
+  Future<String> resetPassword({required String email, required String code, required String password}) async {
+    if (accountError != null) throw accountError!;
+    lastReset = (email: email, code: code, password: password);
+    return 'Password berhasil diganti.';
+  }
+
+  @override
+  Future<User> updateProfile({required String name, String? phone, required String email, String? currentPassword}) async {
+    if (accountError != null) throw accountError!;
+    lastProfile = {'name': name, 'phone': phone, 'email': email, 'current_password': currentPassword};
+    return User(
+      id: user.id,
+      name: name,
+      email: email,
+      phone: phone,
+      role: user.role,
+      roleLabel: user.roleLabel,
+      isActive: true,
+    );
+  }
+
+  @override
+  Future<String> changePassword({required String currentPassword, required String newPassword}) async {
+    if (accountError != null) throw accountError!;
+    lastPasswordChange = (current: currentPassword, next: newPassword);
+    return 'Password berhasil diganti.';
+  }
 }
 
 /// Keranjang palsu di memori dengan aturan stok seperti API.

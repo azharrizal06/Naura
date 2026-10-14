@@ -18,3 +18,12 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Berkas runtime Laravel (bawaan storage/*/.gitignore hilang)
+/storage/logs/*.log
+/storage/framework/views/*.php
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/app/public/products/

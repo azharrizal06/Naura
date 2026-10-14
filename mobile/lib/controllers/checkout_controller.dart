@@ -5,47 +5,68 @@ import '../models/order.dart';
 import '../models/shipping_rate.dart';
 import '../services/api_error.dart';
 import '../services/shipping_service.dart';
-
-/// Rekening transfer toko — sama dengan `store_settings.bank_accounts` di seeder.
-/// Ambil dari API pengaturan toko saat endpoint-nya tersedia.
-const bankAccounts = [
-  (bank: 'BCA', number: '1234567890', holder: 'Toko Naura'),
-  (bank: 'Mandiri', number: '0987654321', holder: 'Toko Naura'),
-];
+import '../services/store_service.dart';
 
 /// Pilihan di layar checkout: alamat, kurir, dan rekening tujuan.
 class CheckoutController extends ChangeNotifier {
-  CheckoutController(this._shipping);
+  CheckoutController(this._shipping, this._store);
 
   final ShippingService _shipping;
+  final StoreService _store;
 
   Address? _address;
   List<ShippingRate> _rates = [];
   ShippingRate? _rate;
   bool _loadingRates = false;
   String? _ratesError;
-  String _bank = bankAccounts.first.bank;
+  List<BankAccount> _banks = [];
+  bool _loadingBanks = false;
+  String? _banksError;
+  String? _bank;
 
   Address? get address => _address;
   List<ShippingRate> get rates => _rates;
   ShippingRate? get rate => _rate;
   bool get loadingRates => _loadingRates;
   String? get ratesError => _ratesError;
-  String get bank => _bank;
+  List<BankAccount> get banks => _banks;
+  bool get loadingBanks => _loadingBanks;
+  String? get banksError => _banksError;
+  String? get bank => _bank;
 
   int get shippingCost => _rate?.cost ?? 0;
   int totalFor(int subtotal) => subtotal + shippingCost;
-  bool get ready => _address != null && _rate != null;
+  bool get ready => _address != null && _rate != null && _bank != null;
 
-  /// Pilih alamat default dari daftar lalu hitung ongkirnya.
+  /// Muat rekening toko, pilih alamat default, lalu hitung ongkirnya.
   Future<void> init(List<Address> addresses) async {
+    final banks = loadBanks();
     final initial = addresses.where((a) => a.isDefault).firstOrNull ?? addresses.firstOrNull;
     if (initial == null) {
       _address = null;
       notifyListeners();
-      return;
+    } else {
+      await selectAddress(initial);
     }
-    await selectAddress(initial);
+    await banks;
+  }
+
+  /// Rekening tujuan transfer dari `store_settings.bank_accounts`.
+  Future<void> loadBanks() async {
+    _loadingBanks = true;
+    _banksError = null;
+    notifyListeners();
+    try {
+      _banks = await _store.bankAccounts();
+      if (!_banks.any((b) => b.bank == _bank)) _bank = _banks.firstOrNull?.bank;
+    } catch (e) {
+      _banks = [];
+      _bank = null;
+      _banksError = apiErrorMessage(e, fallback: 'Rekening toko tidak bisa dimuat. Coba lagi.');
+    } finally {
+      _loadingBanks = false;
+      notifyListeners();
+    }
   }
 
   Future<void> selectAddress(Address address) async {
@@ -87,7 +108,7 @@ class CheckoutController extends ChangeNotifier {
         addressId: _address!.id,
         courier: _rate!.courier,
         service: _rate!.service,
-        bank: _bank,
+        bank: _bank!,
         notes: notes,
       );
 }

@@ -71,11 +71,60 @@ class AuthService {
     return result;
   }
 
+  /// Permintaan ringan untuk membangunkan server (hosting gratis tidur saat sepi).
+  Future<void> warmUp() async {
+    try {
+      await _api.get('/store');
+    } catch (_) {
+      // Abaikan — hanya pemanasan.
+    }
+  }
+
   Future<User> me() async {
     final res = await _api.get('/auth/me') as Map<String, dynamic>;
     return User.fromJson(res['data'] as Map<String, dynamic>);
   }
  
+  // --- Lupa password (kode 6 digit via email) ---
+
+  /// Minta kode reset; server selalu menjawab sama (email terdaftar atau tidak).
+  Future<String> forgotPassword(String email) async {
+    final res = await _api.post('/auth/forgot-password', body: {'email': email}) as Map<String, dynamic>;
+    return res['message'] as String;
+  }
+
+  Future<String> resetPassword({required String email, required String code, required String password}) async {
+    final res = await _api.post('/auth/reset-password', body: {
+      'email': email,
+      'code': code,
+      'password': password,
+      'password_confirmation': password,
+    }) as Map<String, dynamic>;
+    return res['message'] as String;
+  }
+
+  // --- Profil & password ---
+
+  /// [currentPassword] wajib bila email diganti.
+  Future<User> updateProfile({required String name, String? phone, required String email, String? currentPassword}) async {
+    final res = await _api.patch('/auth/profile', body: {
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'current_password': ?currentPassword,
+    }) as Map<String, dynamic>;
+    return User.fromJson(res['data'] as Map<String, dynamic>);
+  }
+
+  Future<String> changePassword({required String currentPassword, required String newPassword}) async {
+    final res = await _api.put('/auth/password', body: {
+      'current_password': currentPassword,
+      'password': newPassword,
+      'password_confirmation': newPassword,
+    }) as Map<String, dynamic>;
+    return res['message'] as String;
+  }
+
   Future<void> logout() async {
     try {
       await _api.post('/auth/logout');

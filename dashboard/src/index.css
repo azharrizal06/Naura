@@ -354,6 +354,20 @@ textarea {
   font-weight: 600;
 }
 
+.sidebar-profile {
+  display: block;
+  color: #c9bccf;
+  border-radius: 4px;
+  margin: 0 -0.4rem;
+  padding: 0.3rem 0.4rem;
+}
+
+.sidebar-profile:hover,
+.sidebar-profile.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
 .sidebar-user button {
   margin-top: 0.75rem;
   padding: 0.4rem 0.8rem;
@@ -780,7 +794,7 @@ td.actions {
     gap: 0.75rem;
   }
 
-  .sidebar-user span {
+  .sidebar-profile strong {
     display: none;
   }
 
@@ -839,4 +853,292 @@ td.actions {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* --- Pesanan (Fase 5) ----------------------------------------------- */
+
+/* Titik terisi = admin perlu bertindak; garis = menunggu pihak lain / selesai. */
+.order-pending {
+  color: var(--kuningan);
+}
+
+.order-paid,
+.order-processing {
+  color: var(--plum);
+  font-weight: 600;
+}
+
+.order-paid::before,
+.order-processing::before,
+.order-completed::before {
+  background: currentColor;
+}
+
+.order-shipped {
+  color: var(--terong);
+}
+
+.order-completed {
+  color: var(--sage);
+}
+
+.order-cancelled {
+  color: var(--marun);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--garis);
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  background: none;
+  color: var(--muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.55rem 0.8rem;
+  font-weight: 500;
+}
+
+.tabs button:hover:not(:disabled) {
+  background: none;
+  color: var(--terong);
+}
+
+.tabs button[aria-pressed='true'] {
+  color: var(--plum);
+  border-bottom-color: var(--plum);
+  font-weight: 600;
+}
+
+.order-number {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.order-number:hover {
+  color: var(--plum);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.order-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0 0;
+  background: var(--plum-tint);
+  border-radius: 6px;
+}
+
+.order-actions p {
+  flex: 1 1 280px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0 2.5rem;
+}
+
+.order-grid address {
+  font-style: normal;
+  line-height: 1.6;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.timeline li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--garis);
+}
+
+.timeline li.todo {
+  color: var(--muted);
+}
+
+.totals td {
+  border-bottom: none;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.totals tr.grand td {
+  font-weight: 700;
+  border-top: 1px solid var(--garis-kuat);
+  padding-top: 0.7rem;
+}
+
+/* --- Laporan (Fase 6) ----------------------------------------------- */
+
+.report-filters {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.report-filters .tabs {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.date-range input {
+  width: auto;
+}
+
+.chart {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--garis);
+  border-radius: 6px;
+  padding: 0.75rem 0.5rem 0.25rem;
+  overflow: hidden;
+}
+
+.chart svg {
+  display: block;
+}
+
+/* Garis bantu & sumbu sengaja samar; teks memakai warna teks, bukan warna seri. */
+.chart-grid {
+  stroke: var(--garis);
+  stroke-width: 1;
+}
+
+.chart-axis {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: var(--body);
+}
+
+.chart-label {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--body);
+}
+
+.chart-bar {
+  fill: var(--plum);
+}
+
+.chart-bar.active {
+  fill: var(--plum-hover);
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 170px;
+  padding: 0.5rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--garis-kuat);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(43, 24, 48, 0.12);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.table-toggle {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.table-toggle summary {
+  cursor: pointer;
+  color: var(--plum);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+/* --- Pengaturan (Fase 6) -------------------------------------------- */
+
+.settings-form {
+  max-width: 760px;
+}
+
+.settings-form .section-header {
+  margin: 1.5rem 0 0;
+}
+
+.bank-row {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1.3fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+@media (max-width: 720px) {
+  .bank-row,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Server sedang bangun (hosting gratis) -------------------------- */
+
+.wake-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: min(560px, calc(100vw - 2rem));
+  padding: 0.7rem 1rem;
+  background: var(--terong);
+  color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(43, 24, 48, 0.25);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.demo-accounts {
+  background: var(--plum-tint);
+  border-radius: 6px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.demo-accounts div {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.demo-accounts button {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
 }

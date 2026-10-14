@@ -1,188 +1,83 @@
 # Toko Online Terpadu (naura)
 
-Aplikasi e-commerce satu toko (single store) yang terintegrasi antara **mobile app (Flutter)**, **dashboard web (React + TypeScript)**, **backend REST API (Laravel)**, dan **database PostgreSQL**.
-
-- **Customer** berbelanja melalui aplikasi **Flutter**.
-- **Admin** & **Owner** mengelola operasional toko melalui dashboard **React**.
-
-## Struktur Monorepo
+E-commerce satu toko busana muslimah. Customer belanja lewat **Flutter**; Admin & Owner mengelola toko lewat dashboard **React**; **Laravel 12** REST API (Sanctum Bearer token) + **PostgreSQL 18**.
 
 ```
-naura/
-├── backend/      # Laravel REST API + PostgreSQL
-├── dashboard/    # React + TypeScript (Admin & Owner)
-├── mobile/       # Flutter (Customer app)
-└── docs/         # Dokumentasi (schema DB, API, dll)
+backend/    Laravel API        → backend/README.md (endpoint, aturan, struktur)
+dashboard/  React 18 + TS + Vite (Admin & Owner) → dashboard/README.md
+mobile/     Flutter 3 (Customer)                 → mobile/README.md
+docs/       database-schema.md, deploy.md (panduan deploy gratis)
 ```
 
-## Tech Stack
+| Role     | Akses                                                          |
+| -------- | -------------------------------------------------------------- |
+| Customer | Mobile: katalog, keranjang, checkout, pesanan, profil          |
+| Admin    | Dashboard: produk/kategori/stok, proses pesanan                |
+| Owner    | Admin + laporan omzet, kelola admin, pengaturan toko           |
 
-| Komponen      | Teknologi                      |
-| ------------- | ------------------------------ |
-| Database      | PostgreSQL 18                  |
-| Backend       | Laravel 12 (REST API, Sanctum) |
-| Dashboard Web | React 18 + TypeScript + Vite   |
-| Mobile App    | Flutter 3 (Android & iOS)      |
+## Roadmap
 
-## Role & Hak Akses
+| # | Fase                 | Status |
+| - | -------------------- | ------ |
+| 1 | Fondasi (auth, role, schema) | ✅ |
+| 2 | Katalog (produk, varian, stok, foto) | ✅ |
+| 3 | Keranjang & checkout (alamat, ongkir RajaOngkir, info toko) | ✅ |
+| 4 | Pesanan & pembayaran (transfer manual, batal) | ✅ |
+| 5 | Dashboard admin (alur status, resi, ringkasan) | ✅ |
+| 6 | Dashboard owner (laporan, admin, pengaturan) | ✅ |
+| 7 | Akun & profil (lupa password OTP, profil, ganti password) | ✅ |
+| 8 | Testing & deployment (data demo, Docker, deploy gratis) | 🚧 |
 
-| Role     | Akses                                                       |
-| -------- | ----------------------------------------------------------- |
-| Customer | Mobile app: katalog, keranjang, checkout, pesanan, profil   |
-| Admin    | Dashboard: kelola produk/kategori/stok, proses pesanan      |
-| Owner    | Dashboard: semua akses Admin + laporan, omzet, kelola admin |
+## Keputusan produk (jangan diusulkan ulang)
 
-## Roadmap (Fase)
+- **Tanpa unggah bukti transfer** — admin mencocokkan mutasi lalu konfirmasi. `payments.proof_path` tidak dipakai.
+- **Omzet** = pesanan dibayar (paid → completed) menurut tanggal konfirmasi bayar; batal tidak dihitung.
+- **Selesai** bisa ditandai customer ("Pesanan diterima") atau admin. **Batal**: customer saat `pending`; admin saat `pending/paid/processing` (sudah bayar → payment tetap `paid`, refund manual).
+- **Kelola admin**: tambah/ubah/nonaktifkan, tanpa hapus permanen.
+- **Reset password** via kode 6 digit email; **tanpa verifikasi email** saat daftar.
+- **Harga berubah / barang nonaktif** di keranjang → checkout ditolak (422) dan keranjang disamakan; customer tidak ditagih diam-diam.
+- Identitas visual: palet kain (Kabut `#F3F1F5`, Terong `#2B1830`, Plum `#6E2F63`, Kuningan `#9C7A3C`), Marcellus + Plus Jakarta Sans, swatch dari nama varian ("Mocca / L") — kamus `dashboard/src/lib/swatch.ts` = `mobile/lib/utils/swatch.dart`.
 
-| #   | Fase                     | Cakupan                                          | Status                        |
-| --- | ------------------------ | ------------------------------------------------ | ----------------------------- |
-| 1   | **Fondasi Sistem**       | setup proyek, schema DB, auth & role, middleware | ✅ Selesai                    |
-| 2   | **Katalog Produk**       | produk, kategori, foto, varian, stok             | ✅ Selesai                    |
-| 3   | **Keranjang & Checkout** | cart, alamat, kalkulasi total                    | 🚧 Hampir selesai (sisa: API pengaturan toko) |
-| 4   | **Pesanan & Pembayaran** | order, pembayaran, pelacakan                     | 🚧 Sebagian (sisa: bukti transfer, input resi, batal pesanan) |
-| 5   | **Dashboard Admin**      | manajemen operasional                            | ⏸️ Belum dimulai              |
-| 6   | **Dashboard Owner**      | laporan & analitik                               | ⏸️ Belum dimulai              |
-| 7   | **Akun & Profil**        | registrasi, login, reset password, profil        | ⏸️ Belum dimulai              |
-| 8   | **Testing & Deployment** | pengujian & rilis                                | ⏸️ Belum dimulai              |
+## Status verifikasi (14 Okt 2026)
 
-## Progres — Fase 3 & 4 Sedang Dikerjakan (14 Oktober 2026)
+- Backend 174 test, Flutter 96 test + `analyze` bersih, dashboard `npm run build` hijau.
+- Image Docker diuji lokal dengan konfigurasi produksi + PostgreSQL bersih: migrasi, `DemoSeeder`, `/up`, CORS, laporan, pengaman demo jalan.
+- RajaOngkir terverifikasi dengan key asli; asal toko Ciperna, Talun, Kab. Cirebon (ID 17131).
+- **Belum dicoba langsung**: deploy sungguhan di Render/Neon/Vercel; checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
 
-### Fase 1 — Fondasi Sistem ✅
+## Fase 8 — demo & deploy (🚧 siap deploy, tinggal langkah akun di `docs/deploy.md`)
 
-- Monorepo `backend/`, `dashboard/`, `mobile/`, `docs/`.
-- Backend **Laravel 12** (dinaikkan dari 11 karena advisory keamanan Composer memblokir 11.x) + Sanctum.
-- Schema DB lengkap (user, kategori, produk, varian, order, payment, shipment, store settings) + seeder.
-- Auth berbasis **Bearer token** (Sanctum personal access token) dan middleware role (`role:admin,owner`).
-- Dashboard React: halaman login + layout terproteksi. Mobile Flutter: splash, login, register.
+- Target: Neon (DB) + Render Docker (`render.yaml`, `backend/Dockerfile`) + Vercel (`dashboard/vercel.json`) + APK + pinger UptimeRobot ke `/up`.
+- Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (±30 produk, 15 customer, ±125 pesanan 60 hari; deterministik; juga untuk reset demo).
+- `DEMO_MODE=true` (backend) / `VITE_DEMO_MODE` / `--dart-define=DEMO_MODE=true`: akun demo tampil di login dan tidak bisa dikunci (password/email/reset/nonaktif → 403).
+- Server tidur (cold start): mobile splash "Server sedang dinyalakan…" + coba ulang ±1,5 menit, aplikasi membangunkan server saat dibuka; dashboard banner + coba ulang GET.
 
-### Fase 2 — Katalog Produk ✅
+## Sisa sebelum rilis sungguhan
 
-- **API publik**: `GET /api/catalog/products`, `GET /api/catalog/categories`.
-- **API Admin/Owner**: `/api/dashboard/products` & `/api/dashboard/categories` — CRUD, varian, stok, upload foto.
-- **Dashboard**: halaman Produk (list, cari, filter, CRUD), Detail Produk (varian & stok), Kategori.
-- **Mobile**: grid katalog (cari, tab kategori, infinite scroll) + detail produk (pilih warna & ukuran).
-
-### Identitas visual ✅
-
-- Toko **busana muslimah** (gamis, hijab, atasan, mukena). Palet kain: Kabut `#F3F1F5`, Terong `#2B1830`, Plum `#6E2F63`, Kuningan `#9C7A3C`.
-- Huruf: **Marcellus** (logo & judul) + **Plus Jakarta Sans** (teks & angka).
-- Swatch warna kain dari nama varian ("Mocca / L") — kamus warna di `dashboard/src/lib/swatch.ts` dan `mobile/lib/utils/swatch.dart` (harus sama).
-- Dashboard & mobile didesain ulang; seeder berisi katalog busana muslimah dengan varian warna/ukuran.
-
-### Fase 3 — Keranjang & Checkout 🚧
-
-Selesai:
-
-- **API keranjang** (khusus Customer): `GET /api/cart`, `POST /api/cart/items`, `PATCH|DELETE /api/cart/items/{id}` — gabung varian yang sama, batas stok, tolak varian/produk nonaktif.
-- **Mobile**: keranjang (tersimpan di server), checkout (alamat tersimpan, pilihan kurir, transfer bank, ringkasan total), angka jumlah barang di tab Keranjang.
-- **Mobile direfactor** ke model / service / controller / screen / widget terpisah (lihat `mobile/README.md`).
-- **Alamat pengiriman tersimpan**: `/api/addresses` (CRUD, satu alamat utama). Di aplikasi: menu Akun → Alamat pengiriman, cari kecamatan/kelurahan lalu kolom wilayah terisi otomatis.
-- **Ongkir RajaOngkir (Komerce)**: `GET /api/shipping/destinations`, `POST /api/shipping/rates` — berat dari `weight_grams` × jumlah, hasil di-cache (kuota harian terbatas). Checkout menampilkan pilihan kurir (termurah terpilih), dan ongkir **dihitung ulang di server** saat pesanan dibuat. Tanpa API key → satu pilihan "Kurir toko" dengan ongkir flat.
-
-Belum:
-
-- **API pengaturan toko**: rekening bank di layar checkout masih ditulis di kode aplikasi. Bila `store_settings.bank_accounts` diubah, aplikasi harus ikut diubah — kalau tidak, server menolak bank yang dipilih (422).
-
-### Fase 4 — Pesanan & Pembayaran 🚧
-
-Selesai:
-
-- **API pesanan** (khusus Customer): `POST /api/orders` membuat pesanan dari keranjang (snapshot barang & alamat, ongkir, payment transfer + rekening tujuan), mengosongkan keranjang, dan memesan stok — dalam satu transaksi dengan kunci baris stok. `GET /api/orders`, `GET /api/orders/{id}` (hanya milik sendiri).
-- **Mobile**: navigasi bawah (Koleksi, Keranjang, Pesanan, Akun), daftar pesanan, detail pesanan dengan garis status, instruksi transfer (salin nomor rekening), info resi.
-
-Belum:
-
-- **Bukti transfer**: customer belum bisa mengunggah bukti (kolom `payments.proof_path` sudah ada).
-- **Pembatalan pesanan** + pengembalian stok: belum ada (stok sudah dikurangi saat pesanan dibuat).
-- **Pelacakan**: aplikasi sudah menampilkan kurir & resi, tetapi belum ada cara mengisinya — menunggu dashboard admin (Fase 5).
-- **Konfirmasi pembayaran** oleh admin (status `pending` → `paid`): Fase 5.
-- Alur checkout → pesanan belum dicoba langsung dari aplikasi ke server (baru lewat test).
-
-### Verifikasi
-
-- 71 test backend lulus (`php artisan test`): keranjang 12, pesanan 13, alamat 6, ongkir 16, perintah origin 2. Semua panggilan RajaOngkir di test dipalsukan (`Http::fake`); `phpunit.xml` mengosongkan key agar test tidak memakai kuota.
-- Dashboard `npm run build` hijau; Flutter `analyze` bersih + 67 test lulus.
-- **RajaOngkir diverifikasi dengan API key asli** (14 Okt 2026): header `key`, body form, kurir gabungan `jne:jnt`, dan pencarian lewat `/api/shipping/destinations` berjalan; key tidak muncul di respons.
-- **Lokasi asal toko**: Ciperna, Talun (Cirebon Selatan), Kab. Cirebon — ID RajaOngkir 17131 (`store_settings.shipping_origin_id`). Ongkir end-to-end lewat Laravel terverifikasi, mis. 900 g ke Braga, Bandung: J&T EZ Rp10.000, JNE REG Rp14.000.
-- Dicoba langsung: backend (`:8000`), dashboard (`:5173`), dan aplikasi Flutter di emulator Android — katalog tampil dari API.
-
-### Perbaikan saat uji coba
-
-- **Dashboard tidak bisa login (419 CSRF token mismatch)** — `statefulApi()` dihapus dari `backend/bootstrap/app.php`, karena dashboard memakai Bearer token, bukan cookie session.
-- **Mobile tertahan di splash pada instalasi baru** — `AuthProvider.bootstrap()` tidak memanggil `notifyListeners()` saat belum ada token; sudah diperbaiki.
-- **Sesi hilang saat reload (dashboard & mobile)** — respons `/api/auth/me` dibungkus `data` tetapi dibaca langsung; admin ditolak setelah reload dan customer otomatis logout. Sudah diperbaiki di `AuthContext.tsx` dan `auth_service.dart`.
-- **Mobile tertahan di splash saat server mati** — permintaan HTTP tidak punya batas waktu, jadi `/auth/me` menggantung. Sekarang semua permintaan timeout 15 detik dan splash menampilkan "Server tidak bisa dihubungi" + **Coba lagi** (token tetap tersimpan).
-- **Panggilan HTTPS dari Laravel gagal (`cURL error 60`)** — PHP lokal tidak punya bundel sertifikat CA. `curl.cainfo` & `openssl.cafile` di `php.ini` diarahkan ke `cacert.pem` di folder PHP (verifikasi SSL tetap aktif).
-- **Login dashboard diblokir CORS** — dev server pindah ke port 5174 karena 5173 terpakai; CORS hanya mengizinkan 5173. Pastikan port 5173 kosong sebelum `npm run dev`.
-
-### Catatan untuk lanjut nanti
-
-- Data seeder belum punya foto produk (tampil sebagai lipatan kain berwarna). Foto `/storage/products/placeholder.png` membalas 403 — cek `php artisan storage:link` sebelum upload foto asli.
-- DB development lama masih berisi produk contoh sebelumnya; `php artisan migrate:fresh --seed` untuk katalog bersih (menghapus semua data).
-- Alamat "Rumah" milik `customer@naura.test` diisi manual sebelum RajaOngkir aktif (belum punya ID wilayah) — ubah di aplikasi dan pilih kecamatan dari pencarian agar ongkir kurir bisa dihitung.
-- Daftar tarif RajaOngkir ikut memuat layanan yang tidak relevan untuk busana (POS Dangerous/Valuable Goods, Kargo, JNE Trucking) — pertimbangkan filter layanan.
-- Lanjutan: sisa **Fase 3** (API pengaturan toko) dan sisa **Fase 4** (bukti transfer, batal pesanan), lalu **Fase 5 — Dashboard Admin** untuk konfirmasi pembayaran & input resi.
-
-### Akun seeder (development)
-
-| Role     | Email               | Password   |
-| -------- | ------------------- | ---------- |
-| Owner    | owner@naura.test    | `password` |
-| Admin    | admin@naura.test    | `password` |
-| Customer | customer@naura.test | `password` |
-
-## Prasyarat Development
-
-| Tool          | Versi minimal | Status di mesin ini  |
-| ------------- | ------------- | -------------------- |
-| PHP           | 8.2+          | ✅ (8.3, via winget) |
-| Composer      | 2.x           | ✅                   |
-| Node.js + npm | 20+ / 10+     | ✅ (Node 24)         |
-| Flutter       | 3.x           | ✅ (3.41)            |
-| PostgreSQL    | 14+           | ✅ (v18)             |
-
-### Cara install PHP + Composer (Windows)
-
-Opsi tercepat — gunakan **Laragon** (sudah bundle PHP, Composer, Node):
-
-1. Download https://laragon.org/download/
-2. Install, lalu PHP & Composer otomatis tersedia di PATH.
-
-Atau manual:
-
-1. PHP: https://windows.php.net/download/ (pilih **Thread Safe x64**), ekstrak ke `C:\php`, tambahkan ke PATH.
-   Aktifkan ekstensi di `php.ini`: `pdo_pgsql`, `pgsql`, `mbstring`, `openssl`, `fileinfo`, `curl`.
-2. Composer: https://getcomposer.org/Composer-Setup.exe
+- SMTP asli (`MAIL_*`; demo memakai `log`) dan cron `schedule:run` (hapus token kedaluwarsa) — paket gratis Render tanpa cron.
+- Token dashboard di `localStorage` (rawan bila ada XSS); APK masih ditandatangani kunci debug (perlu keystore untuk Play Store).
+- Foto produk perlu penyimpanan permanen (mis. S3/R2) — disk Render gratis hilang saat restart; seeder belum punya foto.
+- Tarif RajaOngkir ikut memuat layanan tak relevan (Dangerous Goods, Kargo, Trucking) — pertimbangkan filter.
 
 ## Menjalankan
 
-Lihat `backend/README.md`, `dashboard/README.md`, dan `mobile/README.md`.
-
-Ringkas:
-
 ```bash
-# Backend
-cd backend
-composer install
-cp .env.example .env         # isi DB_*, dan RAJAONGKIR_API_KEY bila memakai ongkir kurir
-php artisan key:generate
-php artisan migrate --seed
-php artisan storage:link
-php artisan store:shipping-origin "<kecamatan toko>"   # lokasi asal ongkir (sekali saja)
-php artisan serve            # http://127.0.0.1:8000
-# HP fisik di jaringan yang sama: php artisan serve --host=0.0.0.0 --port=8000
+# Backend (PHP 8.2+, ekstensi pdo_pgsql/mbstring/openssl/fileinfo/curl)
+cd backend && composer install && cp .env.example .env   # isi DB_*, RAJAONGKIR_API_KEY (opsional)
+php artisan key:generate && php artisan migrate --seed && php artisan storage:link
+php artisan store:shipping-origin "<kecamatan toko>"     # sekali saja
+php artisan serve                                         # :8000 (HP fisik: --host=0.0.0.0)
 
-# Dashboard
-cd dashboard
-npm install
-npm run dev                  # http://127.0.0.1:5173
+# Dashboard — harus port 5173 (CORS)
+cd dashboard && npm install && npm run dev
 
-# Mobile
-cd mobile
-flutter pub get
-flutter run                  # Android emulator otomatis memakai http://10.0.2.2:8000/api
-# HP fisik: flutter run --dart-define=API_BASE_URL=http://<IP-komputer>:8000/api
+# Mobile — emulator otomatis http://10.0.2.2:8000/api
+cd mobile && flutter pub get && flutter run   # HP fisik: --dart-define=API_BASE_URL=http://<IP>:8000/api
 ```
+
+Akun seeder (password `password`): `owner@naura.test`, `admin@naura.test`, `customer@naura.test`.
+
+**Masalah yang pernah terjadi**: login dashboard 419 → jangan pasang `statefulApi()`; CORS gagal → Vite pindah ke 5174, kosongkan port 5173; `cURL error 60` di Windows → `curl.cainfo`/`openssl.cafile` di `php.ini` ke `cacert.pem` (jangan matikan SSL); foto 403 → `php artisan storage:link`.
 
 # Aturan Coding
 

@@ -13,7 +13,8 @@ return [
 
     'guard' => ['web'],
 
-    'expiration' => env('SANCTUM_TOKEN_EXPIRATION'),
+    // Token login berlaku 30 hari (menit); setelah itu pengguna masuk ulang.
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 30) ?: null,
 
     'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
 

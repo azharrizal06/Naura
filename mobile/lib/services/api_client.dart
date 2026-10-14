@@ -73,6 +73,17 @@ class ApiClient {
     return _handle(res);
   }
 
+  Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
+    final res = await _client
+        .put(
+          _uri(path),
+          headers: _headers,
+          body: body != null ? jsonEncode(body) : null,
+        )
+        .timeout(timeout);
+    return _handle(res);
+  }
+
   Future<dynamic> delete(String path) async {
     final res = await _client.delete(_uri(path), headers: _headers).timeout(timeout);
     return _handle(res);

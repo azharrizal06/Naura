@@ -20,8 +20,10 @@ const _user = {
   'is_active': true,
 };
 
-AuthController _controller(http.Client client) => AuthController(
+AuthController _controller(http.Client client, {int wakeAttempts = 1}) => AuthController(
       AuthService(ApiClient(client: client, timeout: const Duration(milliseconds: 100))),
+      wakeAttempts: wakeAttempts,
+      wakeDelay: Duration.zero,
     );
 
 void main() {
@@ -67,5 +69,67 @@ void main() {
     await c.bootstrap();
     expect(c.status, AuthStatus.authenticated);
     expect(c.user?.email, 'customer@naura.test');
+  });
+
+  group('server sedang dinyalakan (cold start hosting gratis)', () {
+    test('gagal dua kali lalu bangun → status waking, lalu masuk', () async {
+      var calls = 0;
+      final c = _controller(
+        MockClient((_) async {
+          calls++;
+          if (calls < 3) throw http.ClientException('Connection refused');
+          return http.Response(jsonEncode({'data': _user}), 200);
+        }),
+        wakeAttempts: 5,
+      );
+      final seen = <AuthStatus>[];
+      c.addListener(() => seen.add(c.status));
+
+      await c.bootstrap();
+
+      expect(seen, contains(AuthStatus.waking));
+      expect(c.status, AuthStatus.authenticated);
+      expect(calls, 3);
+    });
+
+    test('tetap tidak membalas setelah semua percobaan → unreachable', () async {
+      var calls = 0;
+      final c = _controller(MockClient((_) async {
+        calls++;
+        throw http.ClientException('Connection refused');
+      }), wakeAttempts: 3);
+
+      await c.bootstrap();
+
+      expect(c.status, AuthStatus.unreachable);
+      expect(calls, 3);
+    });
+
+    test('502/503 dari proxy saat bangun juga dicoba lagi', () async {
+      var calls = 0;
+      final c = _controller(
+        MockClient((_) async => ++calls == 1
+            ? http.Response('{"message":"Bad Gateway"}', 502)
+            : http.Response(jsonEncode({'data': _user}), 200)),
+        wakeAttempts: 3,
+      );
+
+      await c.bootstrap();
+
+      expect(c.status, AuthStatus.authenticated);
+    });
+
+    test('401 tidak dicoba lagi', () async {
+      var calls = 0;
+      final c = _controller(MockClient((_) async {
+        calls++;
+        return http.Response('{"message":"Unauthenticated."}', 401);
+      }), wakeAttempts: 5);
+
+      await c.bootstrap();
+
+      expect(c.status, AuthStatus.unauthenticated);
+      expect(calls, 1);
+    });
   });
 }

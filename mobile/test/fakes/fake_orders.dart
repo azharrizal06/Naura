@@ -51,6 +51,8 @@ Map<String, dynamic> orderJson({int id = 1, String status = 'pending'}) => {
 class FakeOrderService implements OrderService {
   ApiException? error;
   PlaceOrder? lastPlaced;
+  final List<int> cancelled = [];
+  final List<int> completed = [];
 
   @override
   Future<List<Order>> list() async {
@@ -69,5 +71,19 @@ class FakeOrderService implements OrderService {
     if (error != null) throw error!;
     lastPlaced = request;
     return Order.fromJson(orderJson(id: 9));
+  }
+
+  @override
+  Future<Order> cancel(int id) async {
+    if (error != null) throw error!;
+    cancelled.add(id);
+    return Order.fromJson(orderJson(id: id, status: 'cancelled'));
+  }
+
+  @override
+  Future<Order> complete(int id) async {
+    if (error != null) throw error!;
+    completed.add(id);
+    return Order.fromJson(orderJson(id: id, status: 'completed'));
   }
 }

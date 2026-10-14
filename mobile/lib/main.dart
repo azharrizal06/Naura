@@ -16,6 +16,7 @@ import 'services/cart_service.dart';
 import 'services/catalog_service.dart';
 import 'services/order_service.dart';
 import 'services/shipping_service.dart';
+import 'services/store_service.dart';
 import 'theme/naura_theme.dart';
 
 void main() {
@@ -28,6 +29,7 @@ void main() {
     orderService: OrderService(apiClient),
     addressService: AddressService(apiClient),
     shippingService: ShippingService(apiClient),
+    storeService: StoreService(apiClient),
   ));
 }
 
@@ -40,6 +42,7 @@ class NauraApp extends StatelessWidget {
     required this.orderService,
     required this.addressService,
     required this.shippingService,
+    required this.storeService,
   });
 
   final AuthService authService;
@@ -48,6 +51,7 @@ class NauraApp extends StatelessWidget {
   final OrderService orderService;
   final AddressService addressService;
   final ShippingService shippingService;
+  final StoreService storeService;
 
   @override
   Widget build(BuildContext context) {
@@ -59,9 +63,11 @@ class NauraApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrdersController(orderService)),
         ChangeNotifierProvider(create: (_) => NavController()),
         ChangeNotifierProvider(create: (_) => AddressController(addressService)),
+        Provider<AuthService>.value(value: authService),
         Provider<CatalogService>.value(value: catalogService),
         Provider<OrderService>.value(value: orderService),
         Provider<ShippingService>.value(value: shippingService),
+        Provider<StoreService>.value(value: storeService),
       ],
       child: MaterialApp(
         title: AppConfig.appName,

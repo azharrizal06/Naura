@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,9 +26,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // jadi API tidak dibuat stateful — kalau stateful, request dari origin
         // dashboard akan diwajibkan CSRF token dan login gagal (419).
 
+        // Batas laju untuk semua rute API (limiter "api" di AppServiceProvider).
+        $middleware->throttleApi();
+
+        // Di produksi (Render) aplikasi berada di balik proxy: percayai header X-Forwarded-*
+        // agar IP asli dipakai rate limit dan URL memakai https. Atur lewat TRUSTED_PROXIES.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : explode(',', $proxies));
+        }
+
         // Alias middleware role: ->middleware('role:admin,owner')
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
+            'active' => EnsureUserIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -34,7 +34,7 @@ class CatalogController extends Controller
             ->when($request->query('sort') === 'price_asc', fn ($q) => $q->orderBy('base_price'))
             ->when($request->query('sort') === 'price_desc', fn ($q) => $q->orderByDesc('base_price'))
             ->when(! $request->filled('sort'), fn ($q) => $q->latest())
-            ->paginate($request->integer('per_page', 12))
+            ->paginate($this->perPage($request, 12))
             ->withQueryString();
 
         return ProductListResource::collection($products);

@@ -23,4 +23,10 @@ class AppConfig {
   }
 
   static const String appName = 'naura';
+
+  /// Build demo publik: `--dart-define=DEMO_MODE=true` → halaman masuk menampilkan akun demo.
+  static const bool demoMode = bool.fromEnvironment('DEMO_MODE');
+
+  static const demoEmail = 'customer@naura.test';
+  static const demoPassword = 'password';
 }

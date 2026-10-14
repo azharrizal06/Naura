@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
@@ -74,8 +76,32 @@ class Order extends Model
         return $this->hasOne(Shipment::class);
     }
 
+    /** Cari nomor pesanan atau nama customer. */
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        if (! $term) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($term) {
+            $q->where('order_number', 'ilike', "%{$term}%")
+                ->orWhereHas('user', fn (Builder $u) => $u->where('name', 'ilike', "%{$term}%"));
+        });
+    }
+
+    /**
+     * Nomor berurutan per hari: INV-YYYYMMDD-0001, -0002, …
+     * Wajib dipanggil di dalam transaksi: advisory lock menahan pesanan lain
+     * sampai transaksi selesai, jadi dua checkout bersamaan tidak dapat nomor sama.
+     */
     public static function generateNumber(): string
     {
-        return 'INV-'.now()->format('Ymd').'-'.str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+        $prefix = 'INV-'.now()->format('Ymd').'-';
+        DB::select('select pg_advisory_xact_lock(?)', [crc32('orders.order_number')]);
+
+        $last = static::where('order_number', 'like', $prefix.'%')->max('order_number');
+        $next = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
+
+        return $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
     }
 }
