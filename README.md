@@ -44,10 +44,11 @@ docs/       database-schema.md, deploy.md (panduan deploy gratis)
 - Backend 174 test, Flutter 96 test + `analyze` bersih, dashboard `npm run build` hijau.
 - Image Docker diuji lokal dengan konfigurasi produksi + PostgreSQL bersih: migrasi, `DemoSeeder`, `/up`, CORS, laporan, pengaman demo jalan.
 - RajaOngkir terverifikasi dengan key asli; asal toko Ciperna, Talun, Kab. Cirebon (ID 17131).
-- **Belum dicoba langsung**: deploy sungguhan di Render/Neon/Vercel; checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
+- **Belum dicoba langsung**: deploy sungguhan di Render/Vercel; checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
 
-## Fase 8 — demo & deploy (🚧 siap deploy, tinggal langkah akun di `docs/deploy.md`)
+## Fase 8 — demo & deploy (🚧 GitHub ✅ · Neon ✅ · Render ⏳ · Vercel ⏳ · APK ⏳ · pinger ⏳)
 
+- Progres 14 Okt 2026: kode di github.com/azharrizal06/Naura (`master`); Neon project `blue-tooth-39169704` branch `production` (Singapore) sudah berisi data demo, env di `.env.local` root (rahasia, diabaikan git). Berikutnya: Render Blueprint (isi `APP_KEY`, `DB_URL`, `DB_URL_UNPOOLED`, `APP_URL`, `CORS_ALLOWED_ORIGINS`) → Vercel → APK → pinger — langkah di `docs/deploy.md`.
 - Target: Neon (DB) + Render Docker (`render.yaml`, `backend/Dockerfile`) + Vercel (`dashboard/vercel.json`) + APK + pinger UptimeRobot ke `/up`.
 - Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (±30 produk, 15 customer, ±125 pesanan 60 hari; deterministik; juga untuk reset demo).
 - `DEMO_MODE=true` (backend) / `VITE_DEMO_MODE` / `--dart-define=DEMO_MODE=true`: akun demo tampil di login dan tidak bisa dikunci (password/email/reset/nonaktif → 403).
