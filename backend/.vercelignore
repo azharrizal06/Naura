@@ -1,0 +1,15 @@
+vendor
+node_modules
+tests
+docker
+Dockerfile
+.dockerignore
+.env
+.env.*
+!.env.example
+storage/logs/*.log
+storage/framework/views/*.php
+storage/framework/cache/data/*
+storage/app/public/products
+bootstrap/cache/*.php
+.phpunit.result.cache

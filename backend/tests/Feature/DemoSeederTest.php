@@ -79,7 +79,7 @@ class DemoSeederTest extends TestCase
         $this->assertSame(0, Product::doesntHave('images')->count(), 'ada produk tanpa gambar');
 
         foreach (ProductImage::all() as $image) {
-            $this->assertFileExists(storage_path('app/public/'.$image->path), "file {$image->path} belum dibuat (php artisan demo:images)");
+            $this->assertFileExists(public_path($image->path), "file {$image->path} belum dibuat (php artisan demo:images)");
         }
         $this->assertSame(Product::count(), ProductImage::where('is_primary', true)->count());
     }

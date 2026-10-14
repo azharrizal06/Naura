@@ -33,9 +33,15 @@ class ProductImage extends Model
     /**
      * URL mengikuti host permintaan (bukan APP_URL): HP di jaringan lokal, emulator (10.0.2.2),
      * dan domain produksi masing-masing mendapat URL yang bisa mereka jangkau.
+     * `demo/...` = gambar demo statis di public/demo; lainnya = unggahan di storage/app/public.
      */
     public function getUrlAttribute(): ?string
     {
-        return $this->path ? asset('storage/'.ltrim($this->path, '/')) : null;
+        if (! $this->path) {
+            return null;
+        }
+        $path = ltrim($this->path, '/');
+
+        return asset(str_starts_with($path, 'demo/') ? $path : 'storage/'.$path);
     }
 }

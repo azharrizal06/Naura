@@ -92,9 +92,9 @@ class CatalogTest extends TestCase
         ProductImage::create(['product_id' => $product->id, 'path' => 'demo/gamis-x-1.jpg', 'is_primary' => true]);
 
         $this->getJson('http://192.168.1.5:8000/api/catalog/products')
-            ->assertJsonPath('data.0.primary_image', 'http://192.168.1.5:8000/storage/demo/gamis-x-1.jpg');
+            ->assertJsonPath('data.0.primary_image', 'http://192.168.1.5:8000/demo/gamis-x-1.jpg');
 
         $this->getJson('http://10.0.2.2:8000/api/catalog/products/gamis-x')
-            ->assertJsonPath('data.images.0.url', 'http://10.0.2.2:8000/storage/demo/gamis-x-1.jpg');
+            ->assertJsonPath('data.images.0.url', 'http://10.0.2.2:8000/demo/gamis-x-1.jpg');
     }
 }

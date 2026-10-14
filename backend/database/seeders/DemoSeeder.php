@@ -156,7 +156,7 @@ class DemoSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                // Gambar dari `php artisan demo:images` (storage/app/public/demo, ikut di-commit).
+                // Gambar dari `php artisan demo:images` (public/demo, file statis, ikut di-commit).
                 foreach (array_slice($colors, 0, self::IMAGES_PER_PRODUCT) as $n => $_) {
                     ProductImage::updateOrCreate(
                         ['product_id' => $product->id, 'path' => 'demo/'.$product->slug.'-'.($n + 1).'.jpg'],

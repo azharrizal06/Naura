@@ -9,13 +9,13 @@ use Illuminate\Support\Str;
 
 /**
  * Gambar produk dummy (alat dev, butuh ekstensi GD): siluet busana per kategori dengan warna kain varian.
- * Hasil di storage/app/public/demo/{slug}-{n}.jpg ikut di-commit — server produksi tidak perlu GD.
+ * Hasil di public/demo/{slug}-{n}.jpg (file statis, ikut di-commit) — server produksi tidak perlu GD.
  */
 class GenerateDemoImages extends Command
 {
     protected $signature = 'demo:images {--force : Timpa gambar yang sudah ada}';
 
-    protected $description = 'Buat gambar produk dummy untuk DemoSeeder (storage/app/public/demo)';
+    protected $description = 'Buat gambar produk dummy untuk DemoSeeder (public/demo)';
 
     private const W = 600;
 
@@ -40,7 +40,7 @@ class GenerateDemoImages extends Command
 
             return self::FAILURE;
         }
-        $dir = storage_path('app/public/demo');
+        $dir = public_path('demo');
         if (! is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
