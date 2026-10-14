@@ -4,9 +4,9 @@ Neon (PostgreSQL) → Render (backend Docker) → Vercel (dashboard) → APK →
 
 Batasan paket gratis: backend tidur setelah 15 menit sepi (bangun ±1 menit — dicegah pinger, langkah 5); foto yang diunggah admin hilang saat container restart (disk tidak permanen); tidak ada cron (token kedaluwarsa tidak dibersihkan otomatis).
 
-## 0. Push ke GitHub
+## 0. Push ke GitHub (✅ sudah: `github.com/azharrizal06/Naura`, branch `master`)
 
-Buat repo **kosong** di github.com (private boleh), lalu dari folder `naura/`:
+Untuk perubahan berikutnya cukup `git push`. Pertama kali (repo kosong), dari folder `naura/`:
 
 ```bash
 git remote add origin https://github.com/<user>/naura.git

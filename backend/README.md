@@ -72,4 +72,6 @@ GET|PATCH settings {store_name,store_email?,store_phone?,store_address?,flat_shi
 
 ## Deploy & demo
 
+Gambar produk: URL dari host permintaan (`asset()`, bukan `APP_URL`) agar terjangkau dari HP/emulator. Gambar demo: `php artisan demo:images [--force]` (butuh GD; hasil di-commit).
+
 `Dockerfile` (php:8.3-apache, `docker/entrypoint.sh`: Apache di `$PORT`, `config:cache`, `migrate --force`) + `render.yaml` di root. Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (deterministik, juga untuk reset). Langkah lengkap: `docs/deploy.md`.

@@ -57,7 +57,7 @@ docs/       database-schema.md, deploy.md (panduan deploy gratis)
 
 - SMTP asli (`MAIL_*`; demo memakai `log`) dan cron `schedule:run` (hapus token kedaluwarsa) — paket gratis Render tanpa cron.
 - Token dashboard di `localStorage` (rawan bila ada XSS); APK masih ditandatangani kunci debug (perlu keystore untuk Play Store).
-- Foto produk perlu penyimpanan permanen (mis. S3/R2) — disk Render gratis hilang saat restart; seeder belum punya foto.
+- Foto yang diunggah admin perlu penyimpanan permanen (mis. S3/R2) — disk Render gratis hilang saat restart. Foto demo aman: dibuat `php artisan demo:images`, di-commit di `storage/app/public/demo`.
 - Tarif RajaOngkir ikut memuat layanan tak relevan (Dangerous Goods, Kargo, Trucking) — pertimbangkan filter.
 
 ## Menjalankan
