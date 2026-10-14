@@ -11,7 +11,7 @@ php artisan migrate --seed && php artisan storage:link && php artisan serve
 createdb -U postgres naura_testing && php artisan test   # 174 test
 ```
 
-`.env` penting: `DB_*`, `APP_TIMEZONE=Asia/Jakarta`, `RAJAONGKIR_API_KEY` (key Shipping Cost, header `key`), `RAJAONGKIR_COURIERS` (mis. `jne:jnt:sicepat:pos`), `SANCTUM_TOKEN_EXPIRATION` (menit, default 43200 = 30 hari), `CORS_ALLOWED_ORIGINS`, `MAIL_MAILER=log` (dev: email masuk `storage/logs/laravel.log`), `DEMO_MODE` (lindungi akun demo), `DB_SSLMODE` (`require` untuk Neon), `TRUSTED_PROXIES` (`*` di Render).
+`.env` penting: `DB_*` (`DB_URL` pooled + `DB_URL_UNPOOLED` direct untuk Neon; migrasi produksi pakai `--database=pgsql_direct`), `APP_TIMEZONE=Asia/Jakarta`, `RAJAONGKIR_API_KEY` (key Shipping Cost, header `key`), `RAJAONGKIR_COURIERS` (mis. `jne:jnt:sicepat:pos`), `SANCTUM_TOKEN_EXPIRATION` (menit, default 43200 = 30 hari), `CORS_ALLOWED_ORIGINS`, `MAIL_MAILER=log` (dev: email masuk `storage/logs/laravel.log`), `DEMO_MODE` (lindungi akun demo), `DB_SSLMODE` (`require` untuk Neon), `TRUSTED_PROXIES` (`*` di Render).
 
 ## Endpoint (`/api`)
 

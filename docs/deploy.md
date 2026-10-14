@@ -13,21 +13,19 @@ git remote add origin https://github.com/<user>/naura.git
 git push -u origin master
 ```
 
-## 1. Neon — database
+## 1. Neon — database (✅ sudah: project `blue-tooth-39169704`, branch `production`, Singapore, data demo terisi)
 
-1. neon.com → **New project**, region **AWS Asia Pacific (Singapore)**, Postgres 17/18.
-2. **Connect** → matikan **Connection pooling** → salin connection string, bentuknya
-   `postgresql://<user>:<pass>@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`.
-3. Isi data demo dari komputer ini (PowerShell, folder `backend/`):
+Disiapkan dengan Neon CLI (`neon.ts` + `.neon` di root): `neon login` → `neon deploy` menulis `DATABASE_URL` (pooled) dan `DATABASE_URL_UNPOOLED` (direct) ke `.env.local` di root (diabaikan git — **rahasia**).
 
-```powershell
-$env:DB_URL = "postgresql://...neon.tech/neondb?sslmode=require"
-$env:DB_SSLMODE = "require"
-php artisan migrate:fresh --seed --seeder=DemoSeeder --force
-Remove-Item Env:DB_URL; Remove-Item Env:DB_SSLMODE
+Laravel: `DB_URL` = pooled (aplikasi), `DB_URL_UNPOOLED` = direct (migrasi/seeder, koneksi `pgsql_direct`).
+
+**Reset demo** ke kondisi awal (menghapus semua data di Neon), dari root repo (Git Bash):
+
+```bash
+set -a && . ./.env.local && set +a && cd backend && \
+DB_URL="$DATABASE_URL" DB_URL_UNPOOLED="$DATABASE_URL_UNPOOLED" DB_SSLMODE=require \
+php artisan migrate:fresh --database=pgsql_direct --seed --seeder=DemoSeeder --force
 ```
-
-Jalankan perintah yang sama kapan pun demo perlu **di-reset** ke kondisi awal (menghapus semua data di Neon).
 
 ## 2. Render — backend
 
@@ -35,7 +33,8 @@ Jalankan perintah yang sama kapan pun demo perlu **di-reset** ke kondisi awal (m
 2. render.com → **New → Blueprint** → pilih repo → Render membaca `render.yaml`.
 3. Isi nilai yang diminta:
    - `APP_KEY` = hasil langkah 1
-   - `DB_URL` = connection string Neon
+   - `DB_URL` = nilai `DATABASE_URL` di `.env.local` (pooled)
+   - `DB_URL_UNPOOLED` = nilai `DATABASE_URL_UNPOOLED` di `.env.local` (direct)
    - `APP_URL` = `https://naura-api.onrender.com`
    - `CORS_ALLOWED_ORIGINS` = isi sementara `https://naura-dashboard.vercel.app`, perbaiki setelah langkah 3
 4. **Apply** → tunggu build (±5–10 menit). Cek `https://naura-api.onrender.com/up` (halaman hijau) dan `.../api/store` (JSON info toko).

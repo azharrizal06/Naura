@@ -28,7 +28,9 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_URL
-        sync: false            # connection string Neon (direct, bukan pooler)
+        sync: false            # Neon DATABASE_URL (pooled, host berisi "-pooler") — lalu lintas aplikasi
+      - key: DB_URL_UNPOOLED
+        sync: false            # Neon DATABASE_URL_UNPOOLED (direct) — migrasi saat start
       - key: DB_SSLMODE
         value: require
       - key: CACHE_STORE

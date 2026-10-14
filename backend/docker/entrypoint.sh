@@ -8,6 +8,7 @@ sed -ri "s/<VirtualHost \*:[0-9]+>/<VirtualHost *:${PORT:-10000}>/" /etc/apache2
 php artisan config:cache
 php artisan route:cache
 php artisan storage:link 2>/dev/null || true
-php artisan migrate --force
+# Migrasi lewat koneksi langsung (DB_URL_UNPOOLED); aplikasi memakai DB_URL (pooled).
+php artisan migrate --force --database=pgsql_direct
 
 exec apache2-foreground
