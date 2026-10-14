@@ -12,7 +12,7 @@ services:
     autoDeploy: true
     envVars:
       - key: APP_NAME
-        value: Naura
+        value: Naura Fashion
       - key: APP_ENV
         value: production
       - key: APP_DEBUG

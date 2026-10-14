@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthContext'
+import logoLight from '@/assets/logo-light.png'
 
 export function DashboardLayout() {
   const { user, logout } = useAuth()
@@ -13,7 +14,7 @@ export function DashboardLayout() {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <div className="wordmark">naura</div>
+        <img className="wordmark" src={logoLight} alt="Naura Fashion" />
         <nav aria-label="Menu utama">
           <NavLink to="/" end>
             Ringkasan

@@ -7,6 +7,7 @@ import '../controllers/auth_controller.dart';
 import '../theme/naura_theme.dart';
 import '../widgets/error_box.dart';
 import '../widgets/fabric_bolts.dart';
+import '../widgets/naura_logo.dart';
 import 'forgot_password_screen.dart';
 import 'main_shell.dart';
 import 'register_screen.dart';
@@ -65,8 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppConfig.appName,
-                      style: display(76, color: Colors.white).copyWith(height: 0.95)),
+                  const NauraLogo(width: 240, onDark: true),
                   const SizedBox(height: 12),
                   const Text(
                     'Gamis, hijab, dan mukena untuk dipakai setiap hari.',

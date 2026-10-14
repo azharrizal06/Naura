@@ -1,3 +1,5 @@
+import logoLight from '@/assets/logo-light.png'
+
 // Warna yang dijual toko, dari gelap ke terang — tampil sebagai gulungan kain.
 const BOLTS = ['#6C1F2B', '#A07E62', '#D2A3A3', '#B6A2C8', '#A2B299', '#5A5D3B', '#24304F', '#EEE8DC']
 const BOLT_HEIGHTS = [78, 100, 64, 88, 72, 94, 58, 82]
@@ -7,7 +9,7 @@ export function LoginPanel() {
   return (
     <section className="login-panel">
       <div>
-        <div className="wordmark">naura</div>
+        <img className="wordmark" src={logoLight} alt="Naura Fashion" />
         <p>Kelola koleksi, stok, dan pesanan toko dari satu tempat.</p>
       </div>
       <div className="bolts" aria-hidden="true">

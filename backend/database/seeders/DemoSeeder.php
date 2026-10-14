@@ -113,7 +113,7 @@ class DemoSeeder extends Seeder
     private function seedStore(): void
     {
         StoreSetting::current()->update([
-            'store_name' => 'Naura Busana Muslimah',
+            'store_name' => 'Naura Fashion',
             'store_email' => 'cs@naura.test',
             'store_phone' => '0812-2000-1234',
             'store_address' => 'Jl. Sunan Gunung Jati No. 12, Ciperna, Talun, Kab. Cirebon',

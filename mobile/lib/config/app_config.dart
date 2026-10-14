@@ -22,7 +22,7 @@ class AppConfig {
     return 'http://192.168.1.5:$port/api';
   }
 
-  static const String appName = 'naura';
+  static const String appName = 'Naura Fashion';
 
   /// Build demo publik: `--dart-define=DEMO_MODE=true` → halaman masuk menampilkan akun demo.
   static const bool demoMode = bool.fromEnvironment('DEMO_MODE');

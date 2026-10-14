@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
 import '../theme/naura_theme.dart';
+import '../widgets/naura_logo.dart';
 import 'main_shell.dart';
 import 'login_screen.dart';
 
@@ -22,7 +23,7 @@ class SplashScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('naura', style: display(56, color: Colors.white)),
+                const NauraLogo(width: 220, onDark: true),
                 const SizedBox(height: 24),
                 const SizedBox(
                   width: 20,
@@ -43,7 +44,7 @@ class SplashScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('naura', style: display(56, color: Colors.white)),
+                    const NauraLogo(width: 220, onDark: true),
                     const SizedBox(height: 24),
                     const SizedBox(
                       width: 20,
@@ -78,7 +79,7 @@ class SplashScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('naura', style: display(56, color: Colors.white)),
+                    const NauraLogo(width: 220, onDark: true),
                     const SizedBox(height: 24),
                     const Text(
                       'Server tidak bisa dihubungi',

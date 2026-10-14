@@ -219,15 +219,15 @@ textarea {
   overflow: hidden;
 }
 
+/* Logo Naura Fashion (varian putih untuk latar Terong). */
 .wordmark {
-  font-family: var(--display);
-  font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: 0.01em;
+  display: block;
+  height: auto;
+  max-width: 100%;
 }
 
 .login-panel .wordmark {
-  font-size: clamp(4.5rem, 10vw, 8.5rem);
+  width: clamp(220px, 26vw, 340px);
 }
 
 .login-panel p {
@@ -311,9 +311,8 @@ textarea {
 }
 
 .sidebar .wordmark {
-  font-size: 2.6rem;
-  color: #f3eef5;
-  padding: 0 0.75rem;
+  width: 150px;
+  margin: 0 0.5rem;
 }
 
 .sidebar nav {
@@ -764,8 +763,8 @@ td.actions {
   }
 
   .sidebar .wordmark {
-    font-size: 1.9rem;
-    padding: 0;
+    width: 96px;
+    margin: 0;
   }
 
   .sidebar nav {

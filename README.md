@@ -36,6 +36,7 @@ docs/       database-schema.md, deploy.md (panduan deploy gratis)
 - **Kelola admin**: tambah/ubah/nonaktifkan, tanpa hapus permanen.
 - **Reset password** via kode 6 digit email; **tanpa verifikasi email** saat daftar.
 - **Harga berubah / barang nonaktif** di keranjang → checkout ditolak (422) dan keranjang disamakan; customer tidak ditagih diam-diam.
+- **Logo Naura Fashion** (`docs/brand/`): varian teks putih di latar Terong (sidebar & login dashboard, splash & login mobile), berwarna di latar terang (beranda mobile); simbol hijab untuk favicon & ikon Android.
 - Identitas visual: palet kain (Kabut `#F3F1F5`, Terong `#2B1830`, Plum `#6E2F63`, Kuningan `#9C7A3C`), Marcellus + Plus Jakarta Sans, swatch dari nama varian ("Mocca / L") — kamus `dashboard/src/lib/swatch.ts` = `mobile/lib/utils/swatch.dart`.
 
 ## Status verifikasi (14 Okt 2026)

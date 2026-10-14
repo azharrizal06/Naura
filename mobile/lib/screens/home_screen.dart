@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/catalog_controller.dart';
 import '../theme/naura_theme.dart';
+import '../widgets/naura_logo.dart';
 import '../widgets/category_tab.dart';
 import '../widgets/message_state.dart';
 import '../widgets/product_card.dart';
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Text('naura', style: display(34)),
+              child: const Align(alignment: Alignment.centerLeft, child: NauraLogo(width: 120)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
