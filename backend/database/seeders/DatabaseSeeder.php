@@ -109,7 +109,7 @@ class DatabaseSeeder extends Seeder
                 if ($product->images()->count() === 0) {
                     ProductImage::create([
                         'product_id' => $product->id,
-                        'path' => 'products/placeholder.png',
+                        'path' => 'demo/'.$product->slug.'-1.jpg', // php artisan demo:images
                         'is_primary' => true,
                         'sort_order' => 0,
                     ]);

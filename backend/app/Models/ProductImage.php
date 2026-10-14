@@ -30,8 +30,12 @@ class ProductImage extends Model
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * URL mengikuti host permintaan (bukan APP_URL): HP di jaringan lokal, emulator (10.0.2.2),
+     * dan domain produksi masing-masing mendapat URL yang bisa mereka jangkau.
+     */
     public function getUrlAttribute(): ?string
     {
-        return $this->path ? Storage::disk('public')->url($this->path) : null;
+        return $this->path ? asset('storage/'.ltrim($this->path, '/')) : null;
     }
 }

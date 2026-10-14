@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\StoreSetting;
 use App\Models\User;
@@ -27,6 +28,9 @@ class DemoSeeder extends Seeder
 
     private const DAYS = 60;
 
+    /** Gambar per produk (warna pertama & kedua) — juga dipakai `demo:images`. */
+    public const IMAGES_PER_PRODUCT = 2;
+
     private const ORDERS = 120;
 
     private const BANKS = [
@@ -36,7 +40,7 @@ class DemoSeeder extends Seeder
     ];
 
     /** kategori => [nama => [harga, [warna], [ukuran], berat gram]] — warna dari kamus swatch. */
-    private const CATALOG = [
+    public const CATALOG = [
         'Gamis' => [
             'Gamis Ceruti Alesha' => [289000, ['Mocca', 'Dusty Pink', 'Hitam'], ['M', 'L', 'XL'], 450],
             'Gamis Linen Raya' => [325000, ['Sage', 'Milo', 'Navy'], ['M', 'L', 'XL'], 500],
@@ -151,6 +155,14 @@ class DemoSeeder extends Seeder
                     'weight_grams' => $weight,
                     'is_active' => true,
                 ]);
+
+                // Gambar dari `php artisan demo:images` (storage/app/public/demo, ikut di-commit).
+                foreach (array_slice($colors, 0, self::IMAGES_PER_PRODUCT) as $n => $_) {
+                    ProductImage::updateOrCreate(
+                        ['product_id' => $product->id, 'path' => 'demo/'.$product->slug.'-'.($n + 1).'.jpg'],
+                        ['is_primary' => $n === 0, 'sort_order' => $n],
+                    );
+                }
 
                 $i = 0;
                 foreach ($colors as $color) {

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\User;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,5 +72,15 @@ class DemoSeederTest extends TestCase
         $this->seed(DemoSeeder::class);
 
         $this->assertSame($first, Order::orderBy('order_number')->pluck('total')->all());
+    }
+
+    public function test_every_product_has_an_image_file_that_exists(): void
+    {
+        $this->assertSame(0, Product::doesntHave('images')->count(), 'ada produk tanpa gambar');
+
+        foreach (ProductImage::all() as $image) {
+            $this->assertFileExists(storage_path('app/public/'.$image->path), "file {$image->path} belum dibuat (php artisan demo:images)");
+        }
+        $this->assertSame(Product::count(), ProductImage::where('is_primary', true)->count());
     }
 }

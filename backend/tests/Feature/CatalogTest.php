@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -81,5 +82,19 @@ class CatalogTest extends TestCase
         $this->getJson('/api/catalog/products?per_page=0')
             ->assertOk()
             ->assertJsonPath('meta.per_page', 1);
+    }
+
+    public function test_image_urls_follow_the_host_the_app_used(): void
+    {
+        // APP_URL di .env = 127.0.0.1, tetapi HP di jaringan lokal memanggil lewat IP komputer.
+        config(['app.url' => 'http://127.0.0.1:8000']);
+        $product = Product::factory()->create(['is_active' => true, 'slug' => 'gamis-x']);
+        ProductImage::create(['product_id' => $product->id, 'path' => 'demo/gamis-x-1.jpg', 'is_primary' => true]);
+
+        $this->getJson('http://192.168.1.5:8000/api/catalog/products')
+            ->assertJsonPath('data.0.primary_image', 'http://192.168.1.5:8000/storage/demo/gamis-x-1.jpg');
+
+        $this->getJson('http://10.0.2.2:8000/api/catalog/products/gamis-x')
+            ->assertJsonPath('data.images.0.url', 'http://10.0.2.2:8000/storage/demo/gamis-x-1.jpg');
     }
 }
