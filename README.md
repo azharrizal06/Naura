@@ -44,21 +44,20 @@ docs/       database-schema.md, deploy.md (panduan deploy gratis)
 - Backend 174 test, Flutter 96 test + `analyze` bersih, dashboard `npm run build` hijau.
 - Image Docker diuji lokal dengan konfigurasi produksi + PostgreSQL bersih: migrasi, `DemoSeeder`, `/up`, CORS, laporan, pengaman demo jalan.
 - RajaOngkir terverifikasi dengan key asli; asal toko Ciperna, Talun, Kab. Cirebon (ID 17131).
-- **Belum dicoba langsung**: deploy sungguhan di Render/Vercel; checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
+- **Belum dicoba langsung**: checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
 
-## Fase 8 — demo & deploy (🚧 GitHub ✅ · Neon ✅ · Render ⏳ · Vercel ⏳ · APK ⏳ · pinger ⏳)
+## Fase 8 — demo & deploy (🚧 GitHub ✅ · Neon ✅ · Vercel backend ✅ · Vercel dashboard ✅ · APK ⏳)
 
-- Progres 14 Okt 2026: kode di github.com/azharrizal06/Naura (`master`); Neon project `blue-tooth-39169704` branch `production` (Singapore) sudah berisi data demo, env di `.env.local` root (rahasia, diabaikan git). Berikutnya: Render Blueprint (isi `APP_KEY`, `DB_URL`, `DB_URL_UNPOOLED`, `APP_URL`, `CORS_ALLOWED_ORIGINS`) → Vercel → APK → pinger — langkah di `docs/deploy.md`.
-- Target: Neon (DB) + Render Docker (`render.yaml`, `backend/Dockerfile`) + Vercel (`dashboard/vercel.json`) + APK + pinger UptimeRobot ke `/up`.
+- Produksi (15 Okt 2026): API https://naura-api.vercel.app · dashboard https://naura-dashboard.vercel.app · DB Neon `blue-tooth-39169704` branch `production` (Singapore). Env rahasia di Vercel & `.env.local` root (diabaikan git). Berikutnya: build & bagikan APK — langkah di `docs/deploy.md`.
 - Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (±30 produk, 15 customer, ±125 pesanan 60 hari; deterministik; juga untuk reset demo).
 - `DEMO_MODE=true` (backend) / `VITE_DEMO_MODE` / `--dart-define=DEMO_MODE=true`: akun demo tampil di login dan tidak bisa dikunci (password/email/reset/nonaktif → 403).
 - Server tidur (cold start): mobile splash "Server sedang dinyalakan…" + coba ulang ±1,5 menit, aplikasi membangunkan server saat dibuka; dashboard banner + coba ulang GET.
 
 ## Sisa sebelum rilis sungguhan
 
-- SMTP asli (`MAIL_*`; demo memakai `log`) dan cron `schedule:run` (hapus token kedaluwarsa) — paket gratis Render tanpa cron.
+- SMTP asli (`MAIL_*`; demo memakai `log`) dan cron `schedule:run` (hapus token kedaluwarsa) — Vercel Hobby tanpa cron sesering itu.
 - Token dashboard di `localStorage` (rawan bila ada XSS); APK masih ditandatangani kunci debug (perlu keystore untuk Play Store).
-- Foto yang diunggah admin perlu penyimpanan permanen (mis. S3/R2) — disk Render gratis hilang saat restart. Foto demo aman: dibuat `php artisan demo:images`, di-commit di `storage/app/public/demo`.
+- Foto yang diunggah admin perlu penyimpanan permanen (mis. S3/R2) — filesystem Vercel hanya-baca, unggahan admin gagal/hilang. Foto demo aman: statis di `backend/public/demo`.
 - Tarif RajaOngkir ikut memuat layanan tak relevan (Dangerous Goods, Kargo, Trucking) — pertimbangkan filter.
 
 ## Menjalankan

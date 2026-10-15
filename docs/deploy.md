@@ -1,8 +1,8 @@
 # Deploy demo gratis
 
-Neon (PostgreSQL) → Render (backend Docker) → Vercel (dashboard) → APK → pinger. Semua paket gratis tanpa kartu kredit; login pakai akun GitHub. Ganti `naura-api` / `naura-dashboard` bila nama sudah dipakai orang lain.
+Neon (PostgreSQL) → Vercel (backend PHP + dashboard) → APK. Semua paket gratis tanpa kartu kredit. Produksi: API `https://naura-api.vercel.app`, dashboard `https://naura-dashboard.vercel.app` (Singapore).
 
-Batasan paket gratis: backend tidur setelah 15 menit sepi (bangun ±1 menit — dicegah pinger, langkah 5); foto yang diunggah admin hilang saat container restart (disk tidak permanen); tidak ada cron (token kedaluwarsa tidak dibersihkan otomatis).
+Batasan: filesystem Vercel hanya-baca (kecuali `/tmp`) → foto yang diunggah admin tidak tersimpan permanen (foto demo aman, statis di `public/demo`); tidak ada cron (token kedaluwarsa tidak dibersihkan otomatis). Server tidak tidur, hanya cold start ±1–3 detik — pinger tidak perlu.
 
 ## 0. Push ke GitHub (✅ sudah: `github.com/azharrizal06/Naura`, branch `master`)
 
@@ -27,38 +27,36 @@ DB_URL="$DATABASE_URL" DB_URL_UNPOOLED="$DATABASE_URL_UNPOOLED" DB_SSLMODE=requi
 php artisan migrate:fresh --database=pgsql_direct --seed --seeder=DemoSeeder --force
 ```
 
-## 2. Render — backend
+## 2. Vercel — backend (✅ `naura-api`)
 
-1. Buat APP_KEY: `php artisan key:generate --show` (folder `backend/`), salin hasilnya (`base64:...`).
-2. render.com → **New → Blueprint** → pilih repo → Render membaca `render.yaml`.
-3. Isi nilai yang diminta:
-   - `APP_KEY` = hasil langkah 1
-   - `DB_URL` = nilai `DATABASE_URL` di `.env.local` (pooled)
-   - `DB_URL_UNPOOLED` = nilai `DATABASE_URL_UNPOOLED` di `.env.local` (direct)
-   - `APP_URL` = `https://naura-api.onrender.com`
-   - `CORS_ALLOWED_ORIGINS` = isi sementara `https://naura-dashboard.vercel.app`, perbaiki setelah langkah 3
-4. **Apply** → tunggu build (±5–10 menit). Cek `https://naura-api.onrender.com/up` (halaman hijau) dan `.../api/store` (JSON info toko).
+Runtime `vercel-php` (`backend/vercel.json`, `backend/api/index.php`); env non-rahasia ada di `vercel.json`. CLI: `npm i -g vercel` → `vercel login`, lalu dari `backend/`:
 
-## 3. Vercel — dashboard
+```bash
+vercel link --yes --project naura-api
+vercel env add APP_KEY production --sensitive        # php artisan key:generate --show
+vercel env add DB_URL production --sensitive         # DATABASE_URL (pooled) + endpoint ID, lihat bawah
+vercel env add DB_URL_UNPOOLED production --sensitive
+vercel env add APP_URL production                    # https://naura-api.vercel.app
+vercel env add CORS_ALLOWED_ORIGINS production       # https://naura-dashboard.vercel.app
+vercel deploy --prod
+```
 
-1. vercel.com → **Add New → Project** → pilih repo.
-2. **Root Directory** = `dashboard` (framework terdeteksi Vite).
-3. Environment Variables: `VITE_API_BASE_URL` = `https://naura-api.onrender.com/api`, `VITE_DEMO_MODE` = `true`.
-4. **Deploy** → salin URL produksi (mis. `https://naura-dashboard.vercel.app`).
-5. Kembali ke Render → service `naura-api` → **Environment** → set `CORS_ALLOWED_ORIGINS` ke URL itu persis (tanpa `/` di akhir) → Save (otomatis redeploy).
+**Wajib untuk Neon**: libpq di runtime Vercel tidak mendukung SNI → password di `DB_URL*` diberi awalan endpoint ID: `postgresql://user:endpoint%3Dep-xxx%3B<password>@ep-xxx-pooler...` (ID = bagian pertama host tanpa `-pooler`). `DB_DISABLE_PREPARES=true` (di `vercel.json`) wajib untuk koneksi pooled — prepared statement bernama gagal di dalam transaksi PgBouncer.
+
+Cek: `/up` (200), `/api/store`, `/api/catalog/products`. Alternatif tanpa Vercel: `render.yaml` + `backend/Dockerfile` (Render, perlu kartu).
+
+## 3. Vercel — dashboard (✅ `naura-dashboard`)
+
+Dari `dashboard/`: `vercel link --yes --project naura-dashboard`, env `VITE_API_BASE_URL=https://naura-api.vercel.app/api` dan `VITE_DEMO_MODE=true` (production), lalu `vercel deploy --prod`. Env `VITE_*` tertanam saat build → ubah env = deploy ulang.
 
 ## 4. APK — aplikasi customer
 
 ```bash
 cd mobile
-flutter build apk --release --dart-define=API_BASE_URL=https://naura-api.onrender.com/api --dart-define=DEMO_MODE=true
+flutter build apk --release --dart-define=API_BASE_URL=https://naura-api.vercel.app/api --dart-define=DEMO_MODE=true
 ```
 
-Hasil: `mobile/build/app/outputs/flutter-apk/app-release.apk`. Bagikan lewat **GitHub → Releases → Draft a new release** (lampirkan APK) atau Google Drive. Penerima perlu mengizinkan "instal dari sumber tidak dikenal". APK ditandatangani kunci debug — cukup untuk demo, tidak untuk Play Store.
-
-## 5. Pinger — agar backend tidak tidur
-
-uptimerobot.com (atau cron-job.org) → **New monitor** → HTTP(s) → URL `https://naura-api.onrender.com/up` → interval **5–10 menit**. `/up` tidak menyentuh database, jadi kuota Neon tidak terpakai. Satu service menyala terus ≈ 744 jam/bulan, masih di bawah kuota 750 jam Render.
+Hasil: `mobile/build/app/outputs/flutter-apk/app-release.apk`. Bagikan lewat **GitHub → Releases** (lampirkan APK) atau Google Drive. Penerima perlu mengizinkan "instal dari sumber tidak dikenal". APK ditandatangani kunci debug — cukup untuk demo, tidak untuk Play Store.
 
 ## Akun demo (password `password`)
 
@@ -68,11 +66,10 @@ uptimerobot.com (atau cron-job.org) → **New monitor** → HTTP(s) → URL `htt
 | Admin | admin@naura.test | dashboard (pesanan, produk) |
 | Customer | customer@naura.test | APK |
 
-`DEMO_MODE=true` mencegah pengunjung mengganti password/email akun-akun ini, reset password, atau menonaktifkan admin demo. Fitur lain (checkout, proses pesanan, ubah pengaturan) bisa dicoba — reset dengan langkah 1.3.
+`DEMO_MODE=true` mencegah pengunjung mengganti password/email akun-akun ini, reset password, atau menonaktifkan admin demo. Fitur lain (checkout, proses pesanan, ubah pengaturan) bisa dicoba — reset dengan langkah 1.
 
 ## Bila ada masalah
 
 - **Dashboard: "Network Error" / CORS** → `CORS_ALLOWED_ORIGINS` harus sama persis dengan URL Vercel (https, tanpa `/`).
-- **Render gagal start** → buka **Logs**; pesan `SQLSTATE` = `DB_URL` salah atau `DB_SSLMODE` bukan `require`.
-- **500 setelah ganti env** → Render redeploy otomatis menjalankan ulang `config:cache`; tunggu sampai status **Live**.
+- **500 di Vercel** → log terpotong; deploy preview (terproteksi) dengan `vercel deploy -e APP_DEBUG=true -e ...` lalu `vercel curl <url>/api/store` untuk melihat pesan error. Ubah env = `vercel deploy --prod` ulang.
 - **APK tidak bisa login** → pastikan dibangun dengan `--dart-define=API_BASE_URL=...` dan URL diakhiri `/api`.

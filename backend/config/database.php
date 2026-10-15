@@ -29,6 +29,10 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'), // Neon: require
+            // Pooler Neon (PgBouncer): prepared statement bernama gagal di dalam transaksi → matikan (parameter tetap bertipe).
+            'options' => extension_loaded('pdo_pgsql')
+                ? [(PHP_VERSION_ID >= 80400 ? Pdo\Pgsql::ATTR_DISABLE_PREPARES : PDO::PGSQL_ATTR_DISABLE_PREPARES) => (bool) env('DB_DISABLE_PREPARES', false)]
+                : [],
         ],
 
         // Koneksi langsung (tanpa pooler) untuk migrasi & seeder — saran Neon.

@@ -27,3 +27,6 @@ yarn-error.log
 /storage/framework/sessions/*
 !/storage/framework/sessions/.gitkeep
 /storage/app/public/products/
+
+.vercel
+.env.local

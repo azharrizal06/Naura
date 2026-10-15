@@ -24,6 +24,7 @@
     "LOG_CHANNEL": "stderr",
     "DB_CONNECTION": "pgsql",
     "DB_SSLMODE": "require",
+    "DB_DISABLE_PREPARES": "true",
     "CACHE_STORE": "database",
     "SESSION_DRIVER": "array",
     "QUEUE_CONNECTION": "sync",
