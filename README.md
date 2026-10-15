@@ -46,7 +46,7 @@ docs/       database-schema.md, deploy.md (panduan deploy gratis)
 - RajaOngkir terverifikasi dengan key asli; asal toko Ciperna, Talun, Kab. Cirebon (ID 17131).
 - **Belum dicoba langsung**: checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
 
-## Fase 8 — demo & deploy (🚧 GitHub ✅ · Neon ✅ · Vercel backend ✅ · Vercel dashboard ✅ · APK ✅)
+## Fase 8 — demo & deploy (✅ GitHub ✅ · Neon ✅ · Vercel backend ✅ · Vercel dashboard ✅ · APK ✅)
 
 - Produksi (15 Okt 2026): API https://naura-api.vercel.app · dashboard https://naura-dashboard.vercel.app · DB Neon `blue-tooth-39169704` branch `production` (Singapore). Env rahasia di Vercel & `.env.local` root (diabaikan git). APK release (API produksi, DEMO_MODE) dibangun lokal di `mobile/build/app/outputs/flutter-apk/app-release.apk`, dibagikan manual.
 - Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (±30 produk, 15 customer, ±125 pesanan 60 hari; deterministik; juga untuk reset demo).
