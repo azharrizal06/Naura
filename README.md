@@ -46,9 +46,9 @@ docs/       database-schema.md, deploy.md (panduan deploy gratis)
 - RajaOngkir terverifikasi dengan key asli; asal toko Ciperna, Talun, Kab. Cirebon (ID 17131).
 - **Belum dicoba langsung**: checkout → pesanan dari aplikasi ke server; layar dashboard Fase 5–8 di browser; layar mobile Fase 4–8 di emulator.
 
-## Fase 8 — demo & deploy (🚧 GitHub ✅ · Neon ✅ · Vercel backend ✅ · Vercel dashboard ✅ · APK ⏳)
+## Fase 8 — demo & deploy (🚧 GitHub ✅ · Neon ✅ · Vercel backend ✅ · Vercel dashboard ✅ · APK ✅)
 
-- Produksi (15 Okt 2026): API https://naura-api.vercel.app · dashboard https://naura-dashboard.vercel.app · DB Neon `blue-tooth-39169704` branch `production` (Singapore). Env rahasia di Vercel & `.env.local` root (diabaikan git). Berikutnya: build & bagikan APK — langkah di `docs/deploy.md`.
+- Produksi (15 Okt 2026): API https://naura-api.vercel.app · dashboard https://naura-dashboard.vercel.app · DB Neon `blue-tooth-39169704` branch `production` (Singapore). Env rahasia di Vercel & `.env.local` root (diabaikan git). APK release (API produksi, DEMO_MODE) dibangun lokal di `mobile/build/app/outputs/flutter-apk/app-release.apk`, dibagikan manual.
 - Data demo: `php artisan migrate:fresh --seed --seeder=DemoSeeder` (±30 produk, 15 customer, ±125 pesanan 60 hari; deterministik; juga untuk reset demo).
 - `DEMO_MODE=true` (backend) / `VITE_DEMO_MODE` / `--dart-define=DEMO_MODE=true`: akun demo tampil di login dan tidak bisa dikunci (password/email/reset/nonaktif → 403).
 - Server tidur (cold start): mobile splash "Server sedang dinyalakan…" + coba ulang ±1,5 menit, aplikasi membangunkan server saat dibuka; dashboard banner + coba ulang GET.
